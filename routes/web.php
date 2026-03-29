@@ -8,7 +8,7 @@ use App\Http\Controllers\Auth\AuthController;
 
 /*
 |--------------------------------------------------------------------------
-| ESPACE PUBLIC - Visiteurs (sans connexion)
+| ESPACE PUBLIC — Visiteurs (sans connexion)
 |--------------------------------------------------------------------------
 */
 Route::get('/', [VisiteurController::class, 'index'])->name('home');
@@ -22,11 +22,8 @@ Route::get('/adresses/{slug}', [VisiteurController::class, 'show'])->name('adres
 |--------------------------------------------------------------------------
 */
 Route::middleware('guest')->group(function () {
-    // Connexion
     Route::get('/connexion', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/connexion', [AuthController::class, 'login']);
-
-    // Inscription propriétaire
     Route::get('/inscription', [AuthController::class, 'showRegister'])->name('register');
     Route::post('/inscription', [AuthController::class, 'register']);
 });
@@ -36,7 +33,7 @@ Route::post('/deconnexion', [AuthController::class, 'logout'])->name('logout');
 
 /*
 |--------------------------------------------------------------------------
-| ESPACE PROPRIÉTAIRE (connecté + rôle proprietaire + statut actif)
+| ESPACE PROPRIÉTAIRE
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'role:proprietaire'])
@@ -44,11 +41,14 @@ Route::middleware(['auth', 'role:proprietaire'])
     ->name('proprietaire.')
     ->group(function () {
 
-    Route::get('/', [EtablissementController::class, 'dashboard'])->name('dashboard');
-    Route::get('/nouvelle-fiche', [EtablissementController::class, 'create'])->name('create');
-    Route::post('/nouvelle-fiche', [EtablissementController::class, 'store'])->name('store');
+    Route::get('/',                          [EtablissementController::class, 'dashboard'])->name('dashboard');
+    Route::get('/nouvelle-fiche',            [EtablissementController::class, 'create'])->name('create');
+    Route::post('/nouvelle-fiche',           [EtablissementController::class, 'store'])->name('store');
     Route::get('/fiche/{etablissement}/modifier', [EtablissementController::class, 'edit'])->name('edit');
-    Route::put('/fiche/{etablissement}', [EtablissementController::class, 'update'])->name('update');
+    Route::put('/fiche/{etablissement}',     [EtablissementController::class, 'update'])->name('update');
+
+    // Suppression d'une photo de galerie
+    Route::delete('/photo/{photo}',          [EtablissementController::class, 'deletePhoto'])->name('photo.delete');
 });
 
 
@@ -65,13 +65,13 @@ Route::middleware(['auth', 'role:admin'])
     Route::get('/', [AdminController::class, 'dashboard'])->name('dashboard');
 
     // Établissements
-    Route::get('/etablissements', [AdminController::class, 'etablissements'])->name('etablissements');
+    Route::get('/etablissements',                          [AdminController::class, 'etablissements'])->name('etablissements');
     Route::post('/etablissements/{etablissement}/valider', [AdminController::class, 'valider'])->name('valider');
-    Route::post('/etablissements/{etablissement}/suspendre', [AdminController::class, 'suspendre'])->name('suspendre');
+    Route::post('/etablissements/{etablissement}/suspendre',[AdminController::class, 'suspendre'])->name('suspendre');
     Route::post('/etablissements/{etablissement}/vedette', [AdminController::class, 'toggleVedette'])->name('vedette');
 
     // Propriétaires
-    Route::get('/proprietaires', [AdminController::class, 'proprietaires'])->name('proprietaires');
-    Route::post('/proprietaires/{user}/activer', [AdminController::class, 'activerProprietaire'])->name('activer-proprio');
-    Route::post('/proprietaires/{user}/suspendre', [AdminController::class, 'suspendrePropietaire'])->name('suspendre-proprio');
+    Route::get('/proprietaires',                          [AdminController::class, 'proprietaires'])->name('proprietaires');
+    Route::post('/proprietaires/{user}/activer',          [AdminController::class, 'activerProprietaire'])->name('activer-proprio');
+    Route::post('/proprietaires/{user}/suspendre',        [AdminController::class, 'suspendrePropietaire'])->name('suspendre-proprio');
 });

@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Etablissement;
 use App\Models\User;
-use App\Models\Ville;
-use App\Models\Categorie;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 
 class AdminController extends Controller
 {
@@ -45,13 +45,29 @@ class AdminController extends Controller
     }
 
     /**
-     * Valider un établissement
+     * Valider un établissement → visible publiquement
      */
     public function valider(Etablissement $etablissement)
     {
         $etablissement->update(['statut' => 'actif']);
 
-        return back()->with('success', "« {$etablissement->nom} » est maintenant visible.");
+        // ── Mail au propriétaire : fiche en ligne ─────────────────
+        try {
+            Mail::send(
+                'emails.etablissement-valide',
+                [
+                    'etablissement' => $etablissement->load(['ville', 'categorie', 'user']),
+                    'ficheUrl'      => route('adresses.show', $etablissement->slug),
+                ],
+                fn($m) => $m
+                    ->to($etablissement->user->email)
+                    ->subject("✅ Votre fiche « {$etablissement->nom} » est en ligne !")
+            );
+        } catch (\Exception $e) {
+            \Log::error('Mail validation établissement échoué : ' . $e->getMessage());
+        }
+
+        return back()->with('success', "« {$etablissement->nom} » est maintenant visible. Un mail a été envoyé au propriétaire.");
     }
 
     /**
@@ -89,13 +105,29 @@ class AdminController extends Controller
     }
 
     /**
-     * Activer un propriétaire
+     * Activer un compte propriétaire
      */
     public function activerProprietaire(User $user)
     {
         $user->update(['statut' => 'actif']);
 
-        return back()->with('success', "Le compte de {$user->nom} a été activé.");
+        // ── Mail au propriétaire : compte activé ──────────────────
+        try {
+            Mail::send(
+                'emails.proprietaire-compte-active',
+                [
+                    'user'     => $user,
+                    'loginUrl' => route('login'),
+                ],
+                fn($m) => $m
+                    ->to($user->email)
+                    ->subject('✅ Votre compte est activé — Bonnes Adresses Bénin')
+            );
+        } catch (\Exception $e) {
+            \Log::error('Mail activation propriétaire échoué : ' . $e->getMessage());
+        }
+
+        return back()->with('success', "Le compte de {$user->nom} a été activé. Un mail lui a été envoyé.");
     }
 
     /**
