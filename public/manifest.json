@@ -1,0 +1,24 @@
+{
+    "name": "Bonnes Adresses Bénin",
+    "short_name": "BonnesAdresses",
+    "description": "Trouvez les meilleures adresses au Bénin : restaurants, hôtels, appartements.",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#0f1a12",
+    "theme_color": "#1a6b3c",
+    "orientation": "portrait-primary",
+    "icons": [
+        {
+            "src": "/images/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "/images/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ],
+    "categories": ["travel", "food", "lifestyle"],
+    "lang": "fr"
+}
