@@ -1,6 +1,53 @@
 @extends('layouts.app')
 
-@section('title', 'Explorer les adresses — Bonnes Adresses Bénin')
+{{-- ══ TITRE DYNAMIQUE selon les filtres actifs ════════════ --}}
+@php
+    $villeActive     = $villes->firstWhere('slug', request('ville'));
+    $categorieActive = $categories->firstWhere('slug', request('categorie'));
+    $recherche       = request('q');
+
+    // Titre & description adaptés aux filtres
+    if ($villeActive && $categorieActive) {
+        $ogTitle = ($categorieActive->emoji ?? '🗂️') . ' ' . $categorieActive->nom
+                 . ' à ' . $villeActive->nom . ' — Bonnes Adresses Bénin';
+        $ogDesc  = 'Trouvez les meilleurs ' . strtolower($categorieActive->nom)
+                 . ' à ' . $villeActive->nom
+                 . '. Contacts directs, adresses vérifiées sur Bonnes Adresses Bénin.';
+    } elseif ($villeActive) {
+        $ogTitle = '📍 Adresses à ' . $villeActive->nom . ' — Bonnes Adresses Bénin';
+        $ogDesc  = 'Restaurants, hôtels, appartements et plus à ' . $villeActive->nom
+                 . '. Découvrez les meilleures adresses vérifiées avec contacts directs.';
+    } elseif ($categorieActive) {
+        $ogTitle = ($categorieActive->emoji ?? '🗂️') . ' ' . $categorieActive->nom
+                 . ' au Bénin — Bonnes Adresses Bénin';
+        $ogDesc  = 'Trouvez les meilleurs ' . strtolower($categorieActive->nom)
+                 . ' au Bénin à Cotonou, Bohicon et Parakou. Contacts directs vérifiés.';
+    } elseif ($recherche) {
+        $ogTitle = 'Résultats pour "' . $recherche . '" — Bonnes Adresses Bénin';
+        $ogDesc  = $etablissements->total() . ' adresse(s) trouvée(s) pour "' . $recherche
+                 . '" sur Bonnes Adresses Bénin.';
+    } else {
+        $ogTitle = 'Explorer les adresses au Bénin — Restaurants, Hôtels, Appartements';
+        $ogDesc  = 'Parcourez toutes les meilleures adresses au Bénin : restaurants, hôtels, appartements meublés à Cotonou, Bohicon et Parakou.';
+    }
+
+    $pageTitle = $villeActive || $categorieActive || $recherche
+        ? $ogTitle
+        : 'Explorer les adresses — Bonnes Adresses Bénin';
+@endphp
+
+@section('title', $pageTitle)
+
+{{-- ══ OPEN GRAPH — Page liste ══════════════════════════════ --}}
+@section('og_type',        'website')
+@section('og_title',       $ogTitle)
+@section('og_description', $ogDesc)
+@section('og_image',       asset('images/og-default.jpg'))
+@section('og_image_alt',   'Explorer les adresses — Bonnes Adresses Bénin')
+@section('canonical',      route('adresses.liste', array_filter([
+    'ville'     => request('ville'),
+    'categorie' => request('categorie'),
+])))
 
 @section('content')
 
@@ -51,8 +98,9 @@
             <div class="results-header">
                 <p class="results-count">
                     <strong>{{ $etablissements->total() }}</strong> adresse(s) trouvée(s)
-                    @if(request('ville')) dans <strong>{{ request('ville') }}</strong>@endif
-                    @if(request('categorie')) — <strong>{{ request('categorie') }}</strong>@endif
+                    @if($villeActive) dans <strong>{{ $villeActive->nom }}</strong>@endif
+                    @if($categorieActive) — <strong>{{ $categorieActive->nom }}</strong>@endif
+                    @if($recherche) pour <strong>"{{ $recherche }}"</strong>@endif
                 </p>
             </div>
 

@@ -2,6 +2,14 @@
 
 @section('title', 'Bonnes Adresses Bénin — Restaurants, Hôtels, Appartements')
 
+{{-- ══ OPEN GRAPH — Page d'accueil ═════════════════════════ --}}
+@section('og_type',        'website')
+@section('og_title',       'Bonnes Adresses Bénin — Restaurants, Hôtels, Appartements')
+@section('og_description', 'Trouvez les meilleures adresses au Bénin : restaurants, hôtels, appartements meublés à Cotonou, Bohicon et Parakou. Contacts directs, vérifiés.')
+@section('og_image',       asset('images/og-default.jpg'))
+@section('og_image_alt',   'Bonnes Adresses Bénin — Votre guide des meilleures adresses')
+@section('canonical',      route('home'))
+
 @section('content')
 
 {{-- ══ HERO ══════════════════════════════════════════════ --}}

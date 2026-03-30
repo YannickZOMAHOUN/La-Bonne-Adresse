@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Models\Ville;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -19,6 +21,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Injecte les villes actives dans toutes les vues du layout
+        // → disponible via $villesNav dans layouts/app.blade.php
+        View::composer('layouts.app', function ($view) {
+            $view->with('villesNav', Ville::where('active', true)
+                ->orderBy('nom')
+                ->get(['id', 'nom', 'slug', 'emoji']));
+        });
     }
 }

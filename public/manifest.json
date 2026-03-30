@@ -7,18 +7,42 @@
     "background_color": "#0f1a12",
     "theme_color": "#1a6b3c",
     "orientation": "portrait-primary",
+    "scope": "/",
+    "lang": "fr",
+    "categories": ["travel", "food", "lifestyle"],
     "icons": [
         {
             "src": "/images/icon-192.png",
             "sizes": "192x192",
-            "type": "image/png"
+            "type": "image/png",
+            "purpose": "any maskable"
         },
         {
             "src": "/images/icon-512.png",
             "sizes": "512x512",
-            "type": "image/png"
+            "type": "image/png",
+            "purpose": "any maskable"
         }
     ],
-    "categories": ["travel", "food", "lifestyle"],
-    "lang": "fr"
+    "screenshots": [
+        {
+            "src": "/images/screenshot-mobile.png",
+            "sizes": "390x844",
+            "type": "image/png",
+            "form_factor": "narrow",
+            "label": "Page d'accueil"
+        }
+    ],
+    "shortcuts": [
+        {
+            "name": "Explorer les adresses",
+            "url": "/adresses",
+            "icons": [{ "src": "/images/icon-192.png", "sizes": "192x192" }]
+        },
+        {
+            "name": "Inscrire mon établissement",
+            "url": "/inscription",
+            "icons": [{ "src": "/images/icon-192.png", "sizes": "192x192" }]
+        }
+    ]
 }

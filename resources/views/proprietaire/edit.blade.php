@@ -117,6 +117,10 @@
                 </div>
             </div>
 
+
+            {{-- ── HORAIRES ─────────────────────────────────── --}}
+            @include('proprietaire.partials.horaires', ['horaires' => old('horaires') ? null : $etablissement->horaires])
+
             {{-- ── SERVICES ─────────────────────────────────── --}}
             <div class="form-section">
                 <h2>✅ Services proposés</h2>

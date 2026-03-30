@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Hors ligne — Bonnes Adresses Bénin</title>
+    <link rel="manifest" href="/manifest.json"/>
+    <meta name="theme-color" content="#1a6b3c"/>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'DM Sans', system-ui, sans-serif;
+            background: #0f1a12;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem;
+        }
+        .icon { font-size: 4rem; margin-bottom: 1.5rem; }
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 0.8rem;
+            color: #fff;
+        }
+        p {
+            color: rgba(255,255,255,0.65);
+            font-size: 1rem;
+            line-height: 1.6;
+            max-width: 380px;
+            margin-bottom: 2rem;
+        }
+        .btn {
+            display: inline-block;
+            padding: 0.8rem 2rem;
+            background: #1a6b3c;
+            color: #fff;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: background 0.2s;
+        }
+        .btn:hover { background: #145430; }
+        .logo {
+            position: absolute;
+            top: 1.5rem;
+            left: 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <a href="/" class="logo">📍 Bonnes Adresses Bénin</a>
+    <div class="icon">📡</div>
+    <h1>Vous êtes hors ligne</h1>
+    <p>
+        Vérifiez votre connexion internet et réessayez.
+        Les pages déjà visitées sont disponibles en cache.
+    </p>
+    <a href="/" class="btn" onclick="location.reload()">Réessayer</a>
+</body>
+</html>
