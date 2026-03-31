@@ -44,6 +44,24 @@ class AdminController extends Controller
         return view('admin.etablissements', compact('etablissements'));
     }
 
+
+    /**
+     * Prévisualisation d'une fiche avant validation
+     */
+    public function preview(Etablissement $etablissement)
+    {
+        $etablissement->load(['ville', 'categorie', 'services', 'photos', 'user']);
+
+        $suggestions = Etablissement::actif()
+            ->where('ville_id', $etablissement->ville_id)
+            ->where('categorie_id', $etablissement->categorie_id)
+            ->where('id', '!=', $etablissement->id)
+            ->take(3)
+            ->get();
+
+        return view('admin.preview', compact('etablissement', 'suggestions'));
+    }
+
     /**
      * Valider un établissement → visible publiquement
      */

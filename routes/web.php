@@ -65,10 +65,11 @@ Route::middleware(['auth', 'role:admin'])
     Route::get('/', [AdminController::class, 'dashboard'])->name('dashboard');
 
     // Établissements
-    Route::get('/etablissements',                          [AdminController::class, 'etablissements'])->name('etablissements');
-    Route::post('/etablissements/{etablissement}/valider', [AdminController::class, 'valider'])->name('valider');
-    Route::post('/etablissements/{etablissement}/suspendre',[AdminController::class, 'suspendre'])->name('suspendre');
-    Route::post('/etablissements/{etablissement}/vedette', [AdminController::class, 'toggleVedette'])->name('vedette');
+    Route::get('/etablissements',                               [AdminController::class, 'etablissements'])->name('etablissements');
+    Route::get('/etablissements/{etablissement}/preview',       [AdminController::class, 'preview'])->name('preview');
+    Route::post('/etablissements/{etablissement}/valider',      [AdminController::class, 'valider'])->name('valider');
+    Route::post('/etablissements/{etablissement}/suspendre',    [AdminController::class, 'suspendre'])->name('suspendre');
+    Route::post('/etablissements/{etablissement}/vedette',      [AdminController::class, 'toggleVedette'])->name('vedette');
 
     // Propriétaires
     Route::get('/proprietaires',                          [AdminController::class, 'proprietaires'])->name('proprietaires');

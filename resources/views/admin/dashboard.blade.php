@@ -74,6 +74,9 @@
                             <td>{{ $etab->categorie->emoji }} {{ $etab->categorie->nom }}</td>
                             <td>{{ $etab->created_at->format('d/m/Y') }}</td>
                             <td class="actions-cell">
+                                <a href="{{ route('admin.preview', $etab) }}" class="btn-sm btn-view">
+                                    👁️ Prévisualiser
+                                </a>
                                 <form method="POST" action="{{ route('admin.valider', $etab) }}" style="display:inline">
                                     @csrf
                                     <button class="btn-sm btn-success" onclick="return confirm('Valider cet établissement ?')">
