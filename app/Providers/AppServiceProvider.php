@@ -3,28 +3,29 @@
 namespace App\Providers;
 
 use App\Models\Ville;
+use App\Models\Categorie;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
-    public function register(): void
-    {
-        //
-    }
+    public function register(): void {}
 
-    /**
-     * Bootstrap any application services.
-     */
     public function boot(): void
     {
-        // Injecte les villes actives dans toutes les vues du layout
-        // → disponible via $villesNav dans layouts/app.blade.php
+        // Force HTTPS en production (derrière le proxy Railway)
+        if (config('app.env') === 'production') {
+            URL::forceScheme('https');
+        }
+
+        // Injecte villes et catégories dans le layout
         View::composer('layouts.app', function ($view) {
             $view->with('villesNav', Ville::where('active', true)
+                ->orderBy('nom')
+                ->get(['id', 'nom', 'slug', 'emoji']));
+
+            $view->with('categoriesNav', Categorie::where('active', true)
                 ->orderBy('nom')
                 ->get(['id', 'nom', 'slug', 'emoji']));
         });
