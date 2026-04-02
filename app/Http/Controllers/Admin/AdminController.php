@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Mail\EtablissementValide;
+use App\Mail\ProprietaireCompteActive;
 use App\Models\Etablissement;
 use App\Models\User;
 use Illuminate\Support\Facades\Mail;
@@ -68,27 +70,16 @@ class AdminController extends Controller
     {
         $etablissement->update(['statut' => 'actif']);
 
-        // Chargement des relations nécessaires pour l'email
         $etablissement->load(['user', 'ville', 'categorie']);
 
-        // On utilise queue() au lieu de send() pour éviter le timeout de 30s
         try {
-            Mail::queue(
-                'emails.etablissement-valide',
-                [
-                    'etablissement' => $etablissement,
-                    'ficheUrl'      => route('adresses.show', $etablissement->slug),
-                ],
-                function ($m) use ($etablissement) {
-                    $m->to($etablissement->user->email)
-                      ->subject("✅ Votre fiche « {$etablissement->nom} » est en ligne !");
-                }
-            );
+            Mail::to($etablissement->user->email)
+                ->queue(new EtablissementValide($etablissement));
         } catch (\Exception $e) {
-            Log::error("Erreur mise en file d'attente mail validation : " . $e->getMessage());
+            Log::error("Erreur envoi mail validation établissement : " . $e->getMessage());
         }
 
-        return back()->with('success', "« {$etablissement->nom} » est maintenant visible. Le mail de notification a été mis en file d'attente.");
+        return back()->with('success', "« {$etablissement->nom} » est maintenant visible. Le mail de notification a été envoyé.");
     }
 
     /**
@@ -109,6 +100,7 @@ class AdminController extends Controller
         $etablissement->update(['en_vedette' => !$etablissement->en_vedette]);
 
         $msg = $etablissement->en_vedette ? 'mis en vedette' : 'retiré de la vedette';
+
         return back()->with('success', "« {$etablissement->nom} » a été {$msg}.");
     }
 
@@ -132,24 +124,14 @@ class AdminController extends Controller
     {
         $user->update(['statut' => 'actif']);
 
-        // On utilise queue() pour une réponse instantanée de l'interface admin
         try {
-            Mail::queue(
-                'emails.proprietaire-compte-active',
-                [
-                    'user'     => $user,
-                    'loginUrl' => route('login'),
-                ],
-                function ($m) use ($user) {
-                    $m->to($user->email)
-                      ->subject('✅ Votre compte est activé — Bonnes Adresses Bénin');
-                }
-            );
+            Mail::to($user->email)
+                ->queue(new ProprietaireCompteActive($user));
         } catch (\Exception $e) {
-            Log::error("Erreur mise en file d'attente mail activation propriétaire : " . $e->getMessage());
+            Log::error("Erreur envoi mail activation propriétaire : " . $e->getMessage());
         }
 
-        return back()->with('success', "Le compte de {$user->nom} a été activé. Le mail d'accueil est en cours d'envoi.");
+        return back()->with('success', "Le compte de {$user->nom} a été activé. Le mail d'accueil a été envoyé.");
     }
 
     /**

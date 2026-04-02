@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Mail\AdminNouvelleInscription;
+use App\Mail\ProprietaireInscriptionRecue;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -74,32 +76,18 @@ class AuthController extends Controller
 
         // ── Mail à l'admin : nouvelle inscription à valider ───────
         try {
-            Mail::send(
-                'emails.admin-nouvelle-inscription',
-                [
-                    'user'     => $user,
-                    'adminUrl' => route('admin.proprietaires'),
-                ],
-                fn($m) => $m
-                    ->to(config('mail.from.address'))
-                    ->subject('🔔 Nouvelle inscription à valider — Bonnes Adresses Bénin')
-            );
+            Mail::to(config('mail.from.address'))
+                ->queue(new AdminNouvelleInscription($user));
         } catch (\Exception $e) {
-            // Ne pas bloquer l'inscription si le mail échoue
-            \Log::error('Mail admin inscription échoué : ' . $e->getMessage());
+            Log::error('Mail admin inscription échoué : ' . $e->getMessage());
         }
 
         // ── Mail au propriétaire : confirmation de réception ──────
         try {
-            Mail::send(
-                'emails.proprietaire-inscription-recue',
-                ['user' => $user],
-                fn($m) => $m
-                    ->to($user->email)
-                    ->subject('📬 Inscription reçue — Bonnes Adresses Bénin')
-            );
+            Mail::to($user->email)
+                ->queue(new ProprietaireInscriptionRecue($user));
         } catch (\Exception $e) {
-            \Log::error('Mail proprio inscription échoué : ' . $e->getMessage());
+            Log::error('Mail proprio inscription échoué : ' . $e->getMessage());
         }
 
         return redirect()->route('login')

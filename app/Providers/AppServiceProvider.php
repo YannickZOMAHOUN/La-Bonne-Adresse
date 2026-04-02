@@ -19,15 +19,22 @@ class AppServiceProvider extends ServiceProvider
             URL::forceScheme('https');
         }
 
-        // Injecte villes et catégories dans le layout
-        View::composer('layouts.app', function ($view) {
-            $view->with('villesNav', Ville::where('active', true)
-                ->orderBy('nom')
-                ->get(['id', 'nom', 'slug', 'emoji']));
+        // Injecte villes et catégories dans TOUTES les vues
+        // (y compris les pages d'erreur 404, 500, etc.)
+        View::composer('*', function ($view) {
+            $data = $view->getData();
 
-            $view->with('categoriesNav', Categorie::where('active', true)
-                ->orderBy('nom')
-                ->get(['id', 'nom', 'slug', 'emoji']));
+            if (!isset($data['villesNav'])) {
+                $view->with('villesNav', Ville::where('active', true)
+                    ->orderBy('nom')
+                    ->get(['id', 'nom', 'slug', 'emoji']));
+            }
+
+            if (!isset($data['categoriesNav'])) {
+                $view->with('categoriesNav', Categorie::where('active', true)
+                    ->orderBy('nom')
+                    ->get(['id', 'nom', 'slug', 'emoji']));
+            }
         });
     }
 }
