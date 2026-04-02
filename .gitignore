@@ -7,7 +7,7 @@
 .phpunit.result.cache
 /.fleet
 /.idea
-/.nova
+/.novaRemove-Item package-lock.json
 /.phpunit.cache
 /.vscode
 /.zed
