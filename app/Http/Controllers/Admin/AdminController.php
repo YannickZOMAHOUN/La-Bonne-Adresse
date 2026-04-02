@@ -44,7 +44,6 @@ class AdminController extends Controller
         return view('admin.etablissements', compact('etablissements'));
     }
 
-
     /**
      * Prévisualisation d'une fiche avant validation
      */
@@ -69,23 +68,27 @@ class AdminController extends Controller
     {
         $etablissement->update(['statut' => 'actif']);
 
-        // ── Mail au propriétaire : fiche en ligne ─────────────────
+        // Chargement des relations nécessaires pour l'email
+        $etablissement->load(['user', 'ville', 'categorie']);
+
+        // On utilise queue() au lieu de send() pour éviter le timeout de 30s
         try {
-            Mail::send(
+            Mail::queue(
                 'emails.etablissement-valide',
                 [
-                    'etablissement' => $etablissement->load(['ville', 'categorie', 'user']),
+                    'etablissement' => $etablissement,
                     'ficheUrl'      => route('adresses.show', $etablissement->slug),
                 ],
-                fn($m) => $m
-                    ->to($etablissement->user->email)
-                    ->subject("✅ Votre fiche « {$etablissement->nom} » est en ligne !")
+                function ($m) use ($etablissement) {
+                    $m->to($etablissement->user->email)
+                      ->subject("✅ Votre fiche « {$etablissement->nom} » est en ligne !");
+                }
             );
         } catch (\Exception $e) {
-            \Log::error('Mail validation établissement échoué : ' . $e->getMessage());
+            Log::error("Erreur mise en file d'attente mail validation : " . $e->getMessage());
         }
 
-        return back()->with('success', "« {$etablissement->nom} » est maintenant visible. Un mail a été envoyé au propriétaire.");
+        return back()->with('success', "« {$etablissement->nom} » est maintenant visible. Le mail de notification a été mis en file d'attente.");
     }
 
     /**
@@ -129,23 +132,24 @@ class AdminController extends Controller
     {
         $user->update(['statut' => 'actif']);
 
-        // ── Mail au propriétaire : compte activé ──────────────────
+        // On utilise queue() pour une réponse instantanée de l'interface admin
         try {
-            Mail::send(
+            Mail::queue(
                 'emails.proprietaire-compte-active',
                 [
                     'user'     => $user,
                     'loginUrl' => route('login'),
                 ],
-                fn($m) => $m
-                    ->to($user->email)
-                    ->subject('✅ Votre compte est activé — Bonnes Adresses Bénin')
+                function ($m) use ($user) {
+                    $m->to($user->email)
+                      ->subject('✅ Votre compte est activé — Bonnes Adresses Bénin');
+                }
             );
         } catch (\Exception $e) {
-            \Log::error('Mail activation propriétaire échoué : ' . $e->getMessage());
+            Log::error("Erreur mise en file d'attente mail activation propriétaire : " . $e->getMessage());
         }
 
-        return back()->with('success', "Le compte de {$user->nom} a été activé. Un mail lui a été envoyé.");
+        return back()->with('success', "Le compte de {$user->nom} a été activé. Le mail d'accueil est en cours d'envoi.");
     }
 
     /**
