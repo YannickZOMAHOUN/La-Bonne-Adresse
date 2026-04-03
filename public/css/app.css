@@ -72,18 +72,147 @@ body {
 .hero-title em { font-style: italic; color: var(--gold2); }
 .hero-sub { font-size: 1rem; color: rgba(255,255,255,0.6); max-width: 480px; line-height: 1.7; margin-bottom: 3rem; font-weight: 300; }
 
-/* ── SEARCH BOX ───────────────────────────────────────────── */
-.search-box { background: rgba(255,255,255,0.06); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.12); border-radius: 18px; padding: 1.4rem; display: flex; flex-wrap: wrap; gap: 0.8rem; align-items: flex-end; max-width: 660px; width: 100%; }
-.search-field { flex: 1; min-width: 150px; display: flex; flex-direction: column; gap: 0.4rem; }
-.search-field label { font-size: 0.72rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.5); }
-.search-field select { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; color: #fff; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; padding: 0.6rem 0.9rem; outline: none; cursor: pointer; }
-.search-field select option { background: #1a2a1f; }
-.btn-search { background: linear-gradient(135deg, var(--green), var(--green2)); color: #fff; border: none; border-radius: 10px; padding: 0.6rem 1.6rem; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: transform 0.2s; }
-.btn-search:hover { transform: translateY(-2px); }
-.hero-stats { display: flex; gap: 2.5rem; margin-top: 2.5rem; }
-.stat { text-align: center; }
-.stat-num { font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 700; color: var(--gold2); }
-.stat-label { font-size: 0.78rem; color: rgba(255,255,255,0.45); }
+//* ── SEARCH BOX ──────────────────────────────────────────── */
+.search-box {
+    background: rgba(255,255,255,0.06);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 18px;
+    padding: 1.25rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: flex-end;
+    max-width: 680px;
+    width: 100%;
+}
+
+/* Chaque champ (ville / catégorie) */
+.search-field {
+    flex: 1 1 180px;
+    min-width: 0;         /* évite l'overflow sur flex */
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.search-field label {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.55);
+    white-space: nowrap;
+}
+
+/* Wrapper relatif pour la flèche SVG custom */
+.sf-select-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-field select {
+    width: 100%;
+    appearance: none;
+    -webkit-appearance: none;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 10px;
+    color: #fff;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.92rem;
+    /* padding-right généreux pour ne pas chevaucher la flèche */
+    padding: 0.65rem 2.5rem 0.65rem 0.9rem;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    /* Hauteur min pour bon touch-target mobile */
+    min-height: 44px;
+}
+
+.search-field select option {
+    background: #1a2a1f;
+    color: #fff;
+}
+
+.search-field select:focus {
+    border-color: var(--green2);
+    background: rgba(255,255,255,0.12);
+}
+
+/* Flèche SVG positionnée à droite */
+.sf-arrow {
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: rgba(255,255,255,0.45);
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    transition: color 0.2s;
+}
+.sf-select-wrap:focus-within .sf-arrow {
+    color: var(--gold2);
+}
+
+/* Bouton recherche */
+.btn-search {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, var(--green), var(--green2));
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    /* hauteur alignée avec les selects */
+    padding: 0 1.6rem;
+    min-height: 44px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.92rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.btn-search:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(26,107,60,0.4);
+}
+.btn-search-icon { flex-shrink: 0; }
+
+/* ── Responsive search ────────────────────────────────────── */
+@media (max-width: 640px) {
+    .search-box {
+        flex-direction: column;
+        padding: 1rem;
+        border-radius: 14px;
+        gap: 0.6rem;
+    }
+
+    .search-field {
+        flex: 1 1 100%;
+    }
+
+    .search-field select {
+        font-size: 1rem;       /* évite le zoom auto iOS (min 16px) */
+        min-height: 48px;
+    }
+
+    .btn-search {
+        width: 100%;
+        min-height: 50px;
+        font-size: 1rem;
+        border-radius: 12px;
+    }
+}
 
 /* ── SECTIONS ─────────────────────────────────────────────── */
 .section { padding: 4.5rem 1.5rem; }
@@ -357,4 +486,144 @@ kbd { background: var(--cream); border: 1px solid var(--border); border-radius: 
   .form-row { grid-template-columns: 1fr; }
   .hero-stats { gap: 1.5rem; }
   .search-box { flex-direction: column; }
+}
+/* ═══════════════════════════════════════════════════════════
+   RESPONSIVE — CORRECTIONS HOME + GLOBAL
+   À ajouter à la fin de ton fichier CSS global
+   ═══════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+
+  /* ── Navbar ───────────────────────────────────────────── */
+  .nav-toggle { display: block; }
+  .nav-links {
+    display: none;
+    flex-direction: column;
+    position: absolute;
+    top: 100%; left: 0; right: 0;
+    background: var(--dark);
+    padding: 1rem 1.5rem 1.5rem;
+    gap: 0.8rem;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    z-index: 200;
+  }
+  .nav-links.open { display: flex; }
+  .navbar { position: relative; }
+
+  /* ── Hero ─────────────────────────────────────────────── */
+  .hero { min-height: auto; }
+  .hero-content { padding: 3rem 1.2rem 3.5rem; }
+  .hero-title { font-size: clamp(1.9rem, 7vw, 2.8rem); }
+  .hero-sub { font-size: 0.92rem; margin-bottom: 2rem; }
+  .hero-badge { font-size: 0.7rem; }
+  .hero-stats {
+    gap: 1.2rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 2rem;
+  }
+  .stat-num { font-size: 1.4rem; }
+
+  /* ── Search box ───────────────────────────────────────── */
+  .search-box {
+    flex-direction: column;
+    padding: 1rem;
+    gap: 0.7rem;
+    border-radius: 14px;
+    width: 100%;
+  }
+  .search-field { min-width: 100%; }
+  .search-field select { width: 100%; }
+  .btn-search { width: 100%; padding: 0.75rem; font-size: 1rem; }
+
+  /* ── Villes grid ──────────────────────────────────────── */
+  .villes-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  .ville-card { height: 180px; }
+
+  /* ── Catégories ───────────────────────────────────────── */
+  .cats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.8rem;
+  }
+  .cat-card { padding: 1.2rem 0.9rem; }
+  .cat-icon { font-size: 1.8rem; }
+  .cat-name { font-size: 0.9rem; }
+  .cat-desc { display: none; } /* Masque la desc sur mobile pour aérer */
+
+  /* ── Cards établissements ─────────────────────────────── */
+  .cards-grid { grid-template-columns: 1fr; gap: 1rem; }
+
+  /* ── Sections ─────────────────────────────────────────── */
+  .section { padding: 3rem 1.2rem; }
+  .cats-section { padding: 3rem 1.2rem; }
+  .section-title { font-size: clamp(1.4rem, 5vw, 2rem); }
+  .section-desc { font-size: 0.9rem; }
+
+  /* ── CTA ──────────────────────────────────────────────── */
+  .cta-section { padding: 3.5rem 1.2rem; }
+  .btn-cta { width: 100%; justify-content: center; font-size: 0.92rem; }
+
+  /* ── Footer ───────────────────────────────────────────── */
+  .footer-inner { flex-direction: column; gap: 2rem; }
+  .footer-links { flex-direction: column; gap: 1.5rem; }
+
+  /* ── Fiche détaillée ──────────────────────────────────── */
+  .fiche-inner { grid-template-columns: 1fr; }
+  .fiche-hero { height: 240px; }
+  .fiche-title { font-size: clamp(1.4rem, 5vw, 2rem); }
+  .contact-card { position: static; }
+  .galerie-grid { grid-template-columns: repeat(2, 1fr); }
+
+  /* ── Filtres liste ────────────────────────────────────── */
+  .filtres-form { flex-direction: column; }
+  .filtre-group { min-width: 100%; }
+  .btn-filtre { width: 100%; }
+
+  /* ── Formulaires ──────────────────────────────────────── */
+  .form-row { grid-template-columns: 1fr; }
+  .form-page { padding: 2rem 1rem; }
+  .form-section { padding: 1.3rem; }
+  .form-actions { flex-direction: column-reverse; }
+  .btn-submit, .btn-secondary { width: 100%; text-align: center; }
+
+  /* ── Dashboard propriétaire ───────────────────────────── */
+  .dashboard-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .dashboard-header .btn-primary { width: 100%; text-align: center; }
+  .etab-table th:nth-child(2),
+  .etab-table td:nth-child(2),
+  .etab-table th:nth-child(3),
+  .etab-table td:nth-child(3) { display: none; } /* Masque ville+catégorie sur mobile */
+
+  /* ── Admin tables ─────────────────────────────────────── */
+  .admin-table th:nth-child(4),
+  .admin-table td:nth-child(4),
+  .admin-table th:nth-child(6),
+  .admin-table td:nth-child(6) { display: none; }
+  .admin-nav { gap: 0.4rem; }
+  .admin-nav a { font-size: 0.8rem; padding: 0.5rem 0.8rem; }
+
+  /* ── Auth ─────────────────────────────────────────────── */
+  .auth-card { padding: 1.8rem 1.3rem; }
+
+  /* ── Modal ────────────────────────────────────────────── */
+  .modal-box { padding: 1.5rem 1.2rem; }
+  .modal-actions { flex-direction: column; }
+  .btn-modal-cancel,
+  .btn-modal-confirm { width: 100%; }
+}
+
+@media (max-width: 480px) {
+  .hero-title { font-size: 1.7rem; }
+  .cats-grid { grid-template-columns: 1fr 1fr; }
+  .villes-grid { grid-template-columns: 1fr; }
+  .nav-inner { padding: 0.85rem 1rem; }
+  .logo-text { font-size: 0.88rem; }
+  .actions-cell { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+  .btn-sm { margin-right: 0; }
 }

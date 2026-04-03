@@ -9,6 +9,7 @@ use App\Models\Etablissement;
 use App\Models\User;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class AdminController extends Controller
 {
@@ -69,7 +70,6 @@ class AdminController extends Controller
     public function valider(Etablissement $etablissement)
     {
         $etablissement->update(['statut' => 'actif']);
-
         $etablissement->load(['user', 'ville', 'categorie']);
 
         try {
@@ -93,12 +93,33 @@ class AdminController extends Controller
     }
 
     /**
+     * Supprimer un établissement (interdit s'il est en vedette)
+     */
+    public function supprimerEtablissement(Etablissement $etablissement)
+    {
+        if ($etablissement->en_vedette) {
+            return back()->with('error', "Impossible de supprimer « {$etablissement->nom} » : il est en vedette. Retirez-le d'abord.");
+        }
+
+        if ($etablissement->photo_principale) {
+            Storage::disk('public')->delete($etablissement->photo_principale);
+        }
+        foreach ($etablissement->photos as $photo) {
+            Storage::disk('public')->delete($photo->url);
+        }
+
+        $nom = $etablissement->nom;
+        $etablissement->delete();
+
+        return back()->with('success', "« {$nom} » a été supprimé définitivement.");
+    }
+
+    /**
      * Mettre en vedette / retirer de la vedette
      */
     public function toggleVedette(Etablissement $etablissement)
     {
         $etablissement->update(['en_vedette' => !$etablissement->en_vedette]);
-
         $msg = $etablissement->en_vedette ? 'mis en vedette' : 'retiré de la vedette';
 
         return back()->with('success', "« {$etablissement->nom} » a été {$msg}.");
@@ -142,5 +163,25 @@ class AdminController extends Controller
         $user->update(['statut' => 'suspendu']);
 
         return back()->with('info', "Le compte de {$user->nom} a été suspendu.");
+    }
+
+    /**
+     * Supprimer un propriétaire et tous ses établissements
+     */
+    public function supprimerProprietaire(User $user)
+    {
+        foreach ($user->etablissements()->with('photos')->get() as $etablissement) {
+            if ($etablissement->photo_principale) {
+                Storage::disk('public')->delete($etablissement->photo_principale);
+            }
+            foreach ($etablissement->photos as $photo) {
+                Storage::disk('public')->delete($photo->url);
+            }
+        }
+
+        $nom = $user->nom;
+        $user->delete();
+
+        return back()->with('success', "Le compte de {$nom} et tous ses établissements ont été supprimés.");
     }
 }
