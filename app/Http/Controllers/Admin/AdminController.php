@@ -179,6 +179,20 @@ class AdminController extends Controller
             }
         }
 
+        // CORRECTIF : Gestion sécurisée du user_id avant la mise à jour
+        // Si le formulaire envoie un user_id vide (par exemple, l'option
+        // vide est sélectionnée ou si le champ n'est pas envoyé)
+        if (empty($validated['user_id'])) {
+            // Option 1 : Conserver l'ancien propriétaire s'il existe déjà
+            if ($etablissement->user_id) {
+                $validated['user_id'] = $etablissement->user_id;
+            }
+            // Option 2 : Assigner à l'admin connecté si l'établissement n'avait pas de propriétaire
+            else {
+                $validated['user_id'] = auth()->id();
+            }
+        }
+
         // ── Mise à jour des champs ────────────────────────────────────────
         $etablissement->update($validated);
 
