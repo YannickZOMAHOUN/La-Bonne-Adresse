@@ -22,7 +22,7 @@
     <meta property="og:image:height" content="630"/>
     <meta property="og:image:alt"   content="@yield('og_image_alt', 'Bonnes Adresses Bénin')"/>
 
-    {{-- ══ TWITTER CARD (aussi utilisé par WhatsApp parfois) --}}
+    {{-- ══ TWITTER CARD ════════════════════════════════════ --}}
     <meta name="twitter:card"        content="summary_large_image"/>
     <meta name="twitter:title" content="@yield('og_title', View::yieldContent('title', 'Bonnes Adresses Bénin'))"/>
     <meta name="twitter:description" content="@yield('og_description', View::yieldContent('description', 'Trouvez les meilleures adresses au Bénin.'))"/>
@@ -42,6 +42,19 @@
 
     {{-- ══ CSS ═════════════════════════════════════════════ --}}
     <link rel="stylesheet" href="{{ asset('css/app.css') }}"/>
+
+    {{-- ══ GOOGLE ANALYTICS ════════════════════════════════ --}}
+    @production
+        <script async src="https://www.googletagmanager.com/gtag/js?id={{ config('services.google_analytics.id') }}"></script>
+        <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '{{ config('services.google_analytics.id') }}', {
+                anonymize_ip: true
+            });
+        </script>
+    @endproduction
 
     @stack('styles')
 </head>
