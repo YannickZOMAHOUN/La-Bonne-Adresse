@@ -72,7 +72,7 @@ body {
 .hero-title em { font-style: italic; color: var(--gold2); }
 .hero-sub { font-size: 1rem; color: rgba(255,255,255,0.6); max-width: 480px; line-height: 1.7; margin-bottom: 3rem; font-weight: 300; }
 
-//* ── SEARCH BOX ──────────────────────────────────────────── */
+/* ── SEARCH BOX ──────────────────────────────────────────── */
 .search-box {
     background: rgba(255,255,255,0.06);
     backdrop-filter: blur(16px);
@@ -618,6 +618,9 @@ kbd { background: var(--cream); border: 1px solid var(--border); border-radius: 
   .btn-modal-confirm { width: 100%; }
 }
 
+.stat-card--info {
+    border-left: 4px solid #3b82f6;
+}
 @media (max-width: 480px) {
   .hero-title { font-size: 1.7rem; }
   .cats-grid { grid-template-columns: 1fr 1fr; }

@@ -7,6 +7,7 @@ use App\Mail\EtablissementValide;
 use App\Mail\ProprietaireCompteActive;
 use App\Models\Etablissement;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -19,11 +20,25 @@ class AdminController extends Controller
     public function dashboard()
     {
         $stats = [
-            'total_etablissements' => Etablissement::count(),
-            'en_attente'           => Etablissement::where('statut', 'en_attente')->count(),
-            'actifs'               => Etablissement::where('statut', 'actif')->count(),
-            'proprietaires'        => User::where('role', 'proprietaire')->count(),
-            'proprietaires_actifs' => User::where('role', 'proprietaire')->where('statut', 'actif')->count(),
+            'total_etablissements'  => Etablissement::count(),
+            'en_attente'            => Etablissement::where('statut', 'en_attente')->count(),
+            'actifs'                => Etablissement::where('statut', 'actif')->count(),
+            'proprietaires'         => User::where('role', 'proprietaire')->count(),
+            'proprietaires_actifs'  => User::where('role', 'proprietaire')->where('statut', 'actif')->count(),
+
+            // ══ VISITEURS ══════════════════════════════════════════
+            'visiteurs_aujourd_hui' => DB::table('page_views')
+                ->whereDate('created_at', today())
+                ->distinct('ip')
+                ->count('ip'),
+
+            'visiteurs_ce_mois'     => DB::table('page_views')
+                ->whereMonth('created_at', now()->month)
+                ->whereYear('created_at', now()->year)
+                ->distinct('ip')
+                ->count('ip'),
+
+            'page_views_total'      => DB::table('page_views')->count(),
         ];
 
         $enAttente = Etablissement::where('statut', 'en_attente')

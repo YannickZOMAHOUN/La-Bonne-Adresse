@@ -10,7 +10,8 @@
             <p>Gérez les établissements et les propriétaires.</p>
         </div>
 
-        {{-- Statistiques --}}
+        {{-- ══ STATISTIQUES ÉTABLISSEMENTS ══════════════════════ --}}
+        <h2 class="section-subtitle">📊 Établissements</h2>
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-card-num">{{ $stats['total_etablissements'] }}</div>
@@ -30,7 +31,24 @@
             </div>
         </div>
 
-        {{-- Navigation admin --}}
+        {{-- ══ STATISTIQUES VISITEURS ════════════════════════════ --}}
+        <h2 class="section-subtitle">👁️ Audience</h2>
+        <div class="stats-grid">
+            <div class="stat-card stat-card--info">
+                <div class="stat-card-num">{{ $stats['visiteurs_aujourd_hui'] }}</div>
+                <div class="stat-card-label">Visiteurs uniques aujourd'hui</div>
+            </div>
+            <div class="stat-card stat-card--info">
+                <div class="stat-card-num">{{ $stats['visiteurs_ce_mois'] }}</div>
+                <div class="stat-card-label">Visiteurs uniques ce mois</div>
+            </div>
+            <div class="stat-card stat-card--info">
+                <div class="stat-card-num">{{ number_format($stats['page_views_total'], 0, ',', ' ') }}</div>
+                <div class="stat-card-label">Pages vues (total)</div>
+            </div>
+        </div>
+
+        {{-- ══ NAVIGATION ADMIN ══════════════════════════════════ --}}
         <div class="admin-nav">
             <a href="{{ route('admin.dashboard') }}" class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
                 🏠 Tableau de bord
@@ -43,7 +61,7 @@
             </a>
         </div>
 
-        {{-- En attente de validation --}}
+        {{-- ══ EN ATTENTE DE VALIDATION ══════════════════════════ --}}
         @if($enAttente->isNotEmpty())
         <div class="admin-section">
             <h2>⏳ En attente de validation ({{ $enAttente->count() }})</h2>
