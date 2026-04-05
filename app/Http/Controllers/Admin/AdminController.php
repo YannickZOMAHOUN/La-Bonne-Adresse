@@ -5,11 +5,14 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Mail\EtablissementValide;
 use App\Mail\ProprietaireCompteActive;
+use App\Models\Categorie;
 use App\Models\Etablissement;
 use App\Models\User;
+use App\Models\Ville;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 
 class AdminController extends Controller
@@ -26,7 +29,6 @@ class AdminController extends Controller
             'proprietaires'         => User::where('role', 'proprietaire')->count(),
             'proprietaires_actifs'  => User::where('role', 'proprietaire')->where('statut', 'actif')->count(),
 
-            // ══ VISITEURS ══════════════════════════════════════════
             'visiteurs_aujourd_hui' => DB::table('page_views')
                 ->whereDate('created_at', today())
                 ->distinct('ip')
@@ -59,7 +61,14 @@ class AdminController extends Controller
             ->latest()
             ->paginate(20);
 
-        return view('admin.etablissements', compact('etablissements'));
+        $villes      = Ville::orderBy('nom')->get();
+        $categories  = Categorie::orderBy('nom')->get();
+        $proprietaires = User::where('role', 'proprietaire')
+            ->where('statut', 'actif')
+            ->orderBy('nom')
+            ->get();
+
+        return view('admin.etablissements', compact('etablissements', 'villes', 'categories', 'proprietaires'));
     }
 
     /**
@@ -138,6 +147,54 @@ class AdminController extends Controller
         $msg = $etablissement->en_vedette ? 'mis en vedette' : 'retiré de la vedette';
 
         return back()->with('success', "« {$etablissement->nom} » a été {$msg}.");
+    }
+
+    /**
+     * Créer un établissement directement depuis l'admin
+     * L'admin peut laisser le propriétaire vide (orphelin) et l'attribuer plus tard.
+     */
+    public function storeEtablissement(Request $request)
+    {
+        $validated = $request->validate([
+            'nom'           => 'required|string|max:255',
+            'description'   => 'required|string',
+            'adresse'       => 'required|string|max:255',
+            'ville_id'      => 'required|exists:villes,id',
+            'categorie_id'  => 'required|exists:categories,id',
+            'telephone'     => 'nullable|string|max:30',
+            'email'         => 'nullable|email|max:255',
+            'site_web'      => 'nullable|url|max:255',
+            'whatsapp'      => 'nullable|string|max:30',
+            'fourchette_prix' => 'nullable|string|max:100',
+            'statut'        => 'required|in:actif,en_attente,suspendu',
+            'user_id'       => 'nullable|exists:users,id',
+        ]);
+
+        // Si aucun propriétaire sélectionné, on rattache à l'admin courant par défaut
+        // (ou on peut laisser null si votre schéma le permet)
+        if (empty($validated['user_id'])) {
+            $validated['user_id'] = auth()->id();
+        }
+
+        $etablissement = Etablissement::create($validated);
+
+        return back()->with('success', "« {$etablissement->nom} » a été créé avec succès.");
+    }
+
+    /**
+     * Attribuer (ou changer) le propriétaire d'un établissement
+     */
+    public function attribuerProprietaire(Request $request, Etablissement $etablissement)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+        ]);
+
+        $ancien = $etablissement->user->nom ?? '—';
+        $etablissement->update(['user_id' => $request->user_id]);
+        $nouveau = User::find($request->user_id)->nom;
+
+        return back()->with('success', "« {$etablissement->nom} » a été attribué à {$nouveau} (ancien : {$ancien}).");
     }
 
     /**

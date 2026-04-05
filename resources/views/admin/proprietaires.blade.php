@@ -61,31 +61,33 @@
 
                                 {{-- Activer --}}
                                 @if($proprio->statut !== 'actif')
-                                <button class="btn-sm btn-success"
+                                <button class="btn-icon btn-icon--success"
+                                        title="Activer ce compte"
                                         onclick="ouvrirModal('modal-activer-{{ $proprio->id }}')">
-                                    ✅ Activer
+                                    ✅
                                 </button>
                                 @endif
 
                                 {{-- Suspendre --}}
                                 @if($proprio->statut !== 'suspendu')
-                                <button class="btn-sm btn-warning"
+                                <button class="btn-icon btn-icon--warning"
+                                        title="Suspendre ce compte"
                                         onclick="ouvrirModal('modal-suspendre-{{ $proprio->id }}')">
-                                    ⏸ Suspendre
+                                    ⏸
                                 </button>
                                 @endif
 
                                 {{-- Supprimer --}}
-                                <button class="btn-sm btn-danger"
+                                <button class="btn-icon btn-icon--danger"
+                                        title="Supprimer ce compte"
                                         onclick="ouvrirModal('modal-suppr-proprio-{{ $proprio->id }}')">
-                                    🗑 Supprimer
+                                    🗑
                                 </button>
                             </td>
                         </tr>
 
                         {{-- ── MODALS pour ce propriétaire ─────────────────── --}}
 
-                        {{-- Modal : Activer --}}
                         @if($proprio->statut !== 'actif')
                         <div id="modal-activer-{{ $proprio->id }}" class="modal-overlay" style="display:none">
                             <div class="modal-box">
@@ -111,7 +113,6 @@
                         </div>
                         @endif
 
-                        {{-- Modal : Suspendre --}}
                         @if($proprio->statut !== 'suspendu')
                         <div id="modal-suspendre-{{ $proprio->id }}" class="modal-overlay" style="display:none">
                             <div class="modal-box">
@@ -137,7 +138,6 @@
                         </div>
                         @endif
 
-                        {{-- Modal : Supprimer --}}
                         <div id="modal-suppr-proprio-{{ $proprio->id }}" class="modal-overlay" style="display:none">
                             <div class="modal-box">
                                 <div class="modal-icon">🗑</div>
@@ -182,8 +182,31 @@
     </div>
 </div>
 
-{{-- Styles et scripts modals (identiques à la page établissements) --}}
 <style>
+.btn-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    background: transparent;
+    transition: background 0.15s, transform 0.1s;
+    text-decoration: none;
+}
+.btn-icon:hover { transform: scale(1.15); }
+.btn-icon--success { background: #f0fdf4; }
+.btn-icon--success:hover { background: #dcfce7; }
+.btn-icon--warning { background: #fffbeb; }
+.btn-icon--warning:hover { background: #fef3c7; }
+.btn-icon--danger  { background: #fff1f2; }
+.btn-icon--danger:hover { background: #fee2e2; }
+
+.actions-cell { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+
 .modal-overlay {
     position: fixed;
     inset: 0;
@@ -229,7 +252,6 @@
 .btn-modal-warning:hover { background: #b45309; }
 .btn-modal-danger  { background: #dc2626; }
 .btn-modal-danger:hover  { background: #b91c1c; }
-.btn-warning { background: #d97706; color: #fff; }
 .alert { padding: 0.85rem 1.2rem; border-radius: 8px; margin-bottom: 1rem; font-weight: 500; }
 .alert-success { background: #dcfce7; color: #166534; }
 .alert-error   { background: #fee2e2; color: #991b1b; }

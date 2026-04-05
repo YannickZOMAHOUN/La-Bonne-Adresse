@@ -66,9 +66,11 @@ Route::middleware(['auth', 'role:admin'])
     // Établissements
     Route::get('/etablissements',                                    [AdminController::class, 'etablissements'])->name('etablissements');
     Route::get('/etablissements/{etablissement}/preview',            [AdminController::class, 'preview'])->name('preview');
+    Route::post('/etablissements',                                   [AdminController::class, 'storeEtablissement'])->name('store-etablissement');
     Route::post('/etablissements/{etablissement}/valider',           [AdminController::class, 'valider'])->name('valider');
     Route::post('/etablissements/{etablissement}/suspendre',         [AdminController::class, 'suspendre'])->name('suspendre');
     Route::post('/etablissements/{etablissement}/vedette',           [AdminController::class, 'toggleVedette'])->name('vedette');
+    Route::post('/etablissements/{etablissement}/attribuer',         [AdminController::class, 'attribuerProprietaire'])->name('attribuer-proprietaire');
     Route::delete('/etablissements/{etablissement}',                 [AdminController::class, 'supprimerEtablissement'])->name('supprimer-etablissement');
 
     // Propriétaires
