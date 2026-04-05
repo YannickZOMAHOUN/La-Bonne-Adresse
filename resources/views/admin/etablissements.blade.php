@@ -29,9 +29,11 @@
         <div class="admin-section">
             <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.75rem; margin-bottom:1rem">
                 <h2 style="margin:0">🏪 Tous les établissements ({{ $etablissements->total() }})</h2>
-                <button class="btn-add" onclick="ouvrirModal('modal-creer-etab')">
+
+                {{-- Lien pleine page au lieu d'une modal --}}
+                <a href="{{ route('admin.create-etablissement') }}" class="btn-add">
                     ＋ Ajouter un établissement
-                </button>
+                </a>
             </div>
 
             <div class="admin-table-wrapper">
@@ -73,10 +75,17 @@
                             </td>
                             <td>{{ $etab->created_at->format('d/m/Y') }}</td>
                             <td class="actions-cell">
+
                                 {{-- Prévisualiser --}}
                                 <a href="{{ route('admin.preview', $etab) }}"
                                    class="btn-icon btn-icon--view" title="Prévisualiser">
                                     👁️
+                                </a>
+
+                                {{-- Modifier (pleine page) --}}
+                                <a href="{{ route('admin.edit-etablissement', $etab) }}"
+                                   class="btn-icon btn-icon--edit" title="Modifier">
+                                    ✏️
                                 </a>
 
                                 {{-- Attribuer propriétaire --}}
@@ -122,11 +131,13 @@
                                 </button>
                                 @else
                                 <button class="btn-icon btn-icon--danger"
-                                        disabled title="Retirez de la vedette d'abord"
+                                        disabled
+                                        title="Retirez de la vedette d'abord"
                                         style="opacity:0.35; cursor:not-allowed">
                                     🗑
                                 </button>
                                 @endif
+
                             </td>
                         </tr>
 
@@ -143,7 +154,7 @@
                                 </p>
                                 <form method="POST" action="{{ route('admin.attribuer-proprietaire', $etab) }}">
                                     @csrf
-                                    <div class="form-group">
+                                    <div class="form-group" style="margin-bottom:1rem; text-align:left">
                                         <select name="user_id" class="form-select" required>
                                             <option value="">— Sélectionner un propriétaire —</option>
                                             @foreach($proprietaires as $proprio)
@@ -178,7 +189,8 @@
                                     par tous les visiteurs et le propriétaire recevra un mail de confirmation.
                                 </p>
                                 <div class="modal-actions">
-                                    <button class="btn-modal-cancel" onclick="fermerModal('modal-valider-{{ $etab->id }}')">
+                                    <button class="btn-modal-cancel"
+                                            onclick="fermerModal('modal-valider-{{ $etab->id }}')">
                                         Annuler
                                     </button>
                                     <form method="POST" action="{{ route('admin.valider', $etab) }}">
@@ -203,7 +215,8 @@
                                     par les visiteurs tant qu'il restera suspendu.
                                 </p>
                                 <div class="modal-actions">
-                                    <button class="btn-modal-cancel" onclick="fermerModal('modal-suspendre-{{ $etab->id }}')">
+                                    <button class="btn-modal-cancel"
+                                            onclick="fermerModal('modal-suspendre-{{ $etab->id }}')">
                                         Annuler
                                     </button>
                                     <form method="POST" action="{{ route('admin.suspendre', $etab) }}">
@@ -228,7 +241,8 @@
                                     ses photos et services. Cette action est <strong>irréversible</strong>.
                                 </p>
                                 <div class="modal-actions">
-                                    <button class="btn-modal-cancel" onclick="fermerModal('modal-suppr-etab-{{ $etab->id }}')">
+                                    <button class="btn-modal-cancel"
+                                            onclick="fermerModal('modal-suppr-etab-{{ $etab->id }}')">
                                         Annuler
                                     </button>
                                     <form method="POST" action="{{ route('admin.supprimer-etablissement', $etab) }}">
@@ -262,127 +276,6 @@
     </div>
 </div>
 
-{{-- ══════════════════════════════════════════════════════════════
-     MODAL : CRÉER UN ÉTABLISSEMENT
-══════════════════════════════════════════════════════════════ --}}
-<div id="modal-creer-etab" class="modal-overlay" style="display:none">
-    <div class="modal-box modal-box--large">
-        <div class="modal-icon">🏪</div>
-        <h3>Ajouter un établissement</h3>
-
-        <form method="POST" action="{{ route('admin.store-etablissement') }}" class="form-grid">
-            @csrf
-
-            <div class="form-row">
-                <div class="form-group form-group--full">
-                    <label class="form-label">Nom de l'établissement <span class="required">*</span></label>
-                    <input type="text" name="nom" class="form-input" required placeholder="Ex: Restaurant Le Festin">
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label">Ville <span class="required">*</span></label>
-                    <select name="ville_id" class="form-select" required>
-                        <option value="">— Choisir —</option>
-                        @foreach($villes as $ville)
-                            <option value="{{ $ville->id }}">{{ $ville->emoji }} {{ $ville->nom }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Catégorie <span class="required">*</span></label>
-                    <select name="categorie_id" class="form-select" required>
-                        <option value="">— Choisir —</option>
-                        @foreach($categories as $cat)
-                            <option value="{{ $cat->id }}">{{ $cat->emoji }} {{ $cat->nom }}</option>
-                        @endforeach
-                    </select>
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group form-group--full">
-                    <label class="form-label">Adresse <span class="required">*</span></label>
-                    <input type="text" name="adresse" class="form-input" required placeholder="Ex: Quartier Zongo, Cotonou">
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group form-group--full">
-                    <label class="form-label">Description <span class="required">*</span></label>
-                    <textarea name="description" class="form-textarea" required rows="3"
-                              placeholder="Décrivez l'établissement…"></textarea>
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label">Téléphone</label>
-                    <input type="text" name="telephone" class="form-input" placeholder="+229 97 00 00 00">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">WhatsApp</label>
-                    <input type="text" name="whatsapp" class="form-input" placeholder="+229 97 00 00 00">
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label">Email</label>
-                    <input type="email" name="email" class="form-input" placeholder="contact@example.com">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Site web</label>
-                    <input type="url" name="site_web" class="form-input" placeholder="https://...">
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label">Fourchette de prix</label>
-                    <input type="text" name="fourchette_prix" class="form-input" placeholder="Ex: 2 000 – 10 000 FCFA">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Statut initial</label>
-                    <select name="statut" class="form-select">
-                        <option value="actif">✅ Actif (publié immédiatement)</option>
-                        <option value="en_attente">⏳ En attente de validation</option>
-                        <option value="suspendu">🚫 Suspendu</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group form-group--full">
-                    <label class="form-label">
-                        Propriétaire
-                        <small style="font-weight:normal; color:#888">(optionnel — peut être attribué plus tard)</small>
-                    </label>
-                    <select name="user_id" class="form-select">
-                        <option value="">— Aucun pour l'instant —</option>
-                        @foreach($proprietaires as $proprio)
-                            <option value="{{ $proprio->id }}">
-                                {{ $proprio->nom }} — {{ $proprio->email }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-            </div>
-
-            <div class="modal-actions" style="margin-top:0.5rem">
-                <button type="button" class="btn-modal-cancel"
-                        onclick="fermerModal('modal-creer-etab')">
-                    Annuler
-                </button>
-                <button type="submit" class="btn-modal-confirm btn-modal-success">
-                    🏪 Créer l'établissement
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
 {{-- ── STYLES ─────────────────────────────────────────────────── --}}
 <style>
 /* ── Bouton ajout ── */
@@ -398,6 +291,7 @@
     font-size: 0.9rem;
     font-weight: 600;
     cursor: pointer;
+    text-decoration: none;
     transition: background 0.15s;
 }
 .btn-add:hover { background: #15803d; }
@@ -420,6 +314,8 @@
 .btn-icon:hover { transform: scale(1.15); }
 .btn-icon--view    { background: #eff6ff; }
 .btn-icon--view:hover { background: #dbeafe; }
+.btn-icon--edit    { background: #f0f9ff; }
+.btn-icon--edit:hover { background: #e0f2fe; }
 .btn-icon--assign  { background: #f5f3ff; }
 .btn-icon--assign:hover { background: #ede9fe; }
 .btn-icon--success { background: #f0fdf4; }
@@ -459,12 +355,6 @@
     max-height: 90vh;
     overflow-y: auto;
 }
-.modal-box--large {
-    max-width: 680px;
-    text-align: left;
-}
-.modal-box--large h3 { text-align: center; }
-.modal-box--large .modal-icon { text-align: center; }
 @keyframes modalIn {
     from { transform: scale(0.92); opacity: 0; }
     to   { transform: scale(1);    opacity: 1; }
@@ -482,57 +372,35 @@
     padding: 0.6rem 1.4rem; border: none; border-radius: 8px;
     font-weight: 600; cursor: pointer; color: #fff; transition: all 0.15s;
 }
-.btn-modal-success  { background: #16a34a; }
-.btn-modal-success:hover  { background: #15803d; }
-.btn-modal-warning  { background: #d97706; }
-.btn-modal-warning:hover  { background: #b45309; }
-.btn-modal-danger   { background: #dc2626; }
-.btn-modal-danger:hover   { background: #b91c1c; }
+.btn-modal-success { background: #16a34a; }
+.btn-modal-success:hover { background: #15803d; }
+.btn-modal-warning { background: #d97706; }
+.btn-modal-warning:hover { background: #b45309; }
+.btn-modal-danger  { background: #dc2626; }
+.btn-modal-danger:hover  { background: #b91c1c; }
 
-/* ── Formulaire dans modal ── */
-.form-grid { width: 100%; }
-.form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.75rem;
-    margin-bottom: 0.75rem;
-}
-.form-group { display: flex; flex-direction: column; gap: 0.3rem; }
-.form-group--full { grid-column: 1 / -1; }
-.form-label { font-size: 0.85rem; font-weight: 600; color: #374151; }
-.required { color: #dc2626; }
-.form-input,
-.form-select,
-.form-textarea {
+/* ── Form dans modal attrib ── */
+.form-select {
+    width: 100%;
     padding: 0.55rem 0.8rem;
     border: 1.5px solid #d1d5db;
     border-radius: 8px;
     font-size: 0.9rem;
     color: #1f2937;
     background: #fff;
-    transition: border-color 0.15s;
-    width: 100%;
     box-sizing: border-box;
 }
-.form-input:focus,
-.form-select:focus,
-.form-textarea:focus {
+.form-select:focus {
     outline: none;
     border-color: #16a34a;
     box-shadow: 0 0 0 3px rgba(22,163,74,0.12);
 }
-.form-textarea { resize: vertical; min-height: 80px; }
 
 /* ── Alertes ── */
 .alert { padding: 0.85rem 1.2rem; border-radius: 8px; margin-bottom: 1rem; font-weight: 500; }
 .alert-success { background: #dcfce7; color: #166534; }
 .alert-error   { background: #fee2e2; color: #991b1b; }
 .alert-info    { background: #dbeafe; color: #1e40af; }
-
-@media (max-width: 600px) {
-    .form-row { grid-template-columns: 1fr; }
-    .form-group--full { grid-column: 1; }
-}
 </style>
 
 {{-- ── SCRIPTS ─────────────────────────────────────────────────── --}}
