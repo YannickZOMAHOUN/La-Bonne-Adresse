@@ -25,6 +25,7 @@ class AdminController extends Controller
     private const LOCAL_PREFIX  = '01';
 
     private const PHOTO_MIMES  = 'jpg,jpeg,png,webp';
+    private const MENU_MIMES   = 'jpg,jpeg,png,webp,pdf';
     // Pas de limite de taille ni de nombre de photos
 
     private const JOURS = [
@@ -109,6 +110,11 @@ class AdminController extends Controller
                 ->store('etablissements', 'public');
         }
 
+        if ($request->hasFile('menu')) {
+            $validated['menu'] = $request->file('menu')
+                ->store('etablissements/menus', 'public');
+        }
+
         $validated['horaires'] = $this->buildHoraires($request);
 
         // Si aucun propriétaire choisi, on rattache l'admin connecté
@@ -163,28 +169,37 @@ class AdminController extends Controller
                 ->store('etablissements', 'public');
         }
 
+        // ── Menu ──────────────────────────────────────────────────────────
+        if ($request->boolean('supprimer_menu') && $etablissement->menu) {
+            Storage::disk('public')->delete($etablissement->menu);
+            $validated['menu'] = null;
+        }
+
+        if ($request->hasFile('menu')) {
+            if ($etablissement->menu) {
+                Storage::disk('public')->delete($etablissement->menu);
+            }
+            $validated['menu'] = $request->file('menu')
+                ->store('etablissements/menus', 'public');
+        }
+
         // ── Horaires ──────────────────────────────────────────────────────
         $validated['horaires'] = $this->buildHoraires($request);
 
         // ── Suppression sélective de photos de galerie ────────────────────
         if ($request->filled('supprimer_photos')) {
-            $photosASupprimer = Photo::whereIn('id', $request->input('supprimer_photos'))
+            Photo::whereIn('id', $request->input('supprimer_photos'))
                 ->where('etablissement_id', $etablissement->id)
-                ->get();
-
-            foreach ($photosASupprimer as $photo) {
-                Storage::disk('public')->delete($photo->url);
-                $photo->delete();
-            }
+                ->get()
+                ->each(function ($photo) {
+                    Storage::disk('public')->delete($photo->url);
+                    $photo->delete();
+                });
         }
 
-        // CORRECTIF : Gestion sécurisée du user_id avant la mise à jour
+        // Conserver le propriétaire actuel si non fourni
         if (empty($validated['user_id'])) {
-            if ($etablissement->user_id) {
-                $validated['user_id'] = $etablissement->user_id;
-            } else {
-                $validated['user_id'] = auth()->id();
-            }
+            $validated['user_id'] = $etablissement->user_id ?? auth()->id();
         }
 
         // ── Mise à jour des champs ────────────────────────────────────────
@@ -251,6 +266,10 @@ class AdminController extends Controller
 
         if ($etablissement->photo_principale) {
             Storage::disk('public')->delete($etablissement->photo_principale);
+        }
+
+        if ($etablissement->menu) {
+            Storage::disk('public')->delete($etablissement->menu);
         }
 
         foreach ($etablissement->photos as $photo) {
@@ -323,6 +342,9 @@ class AdminController extends Controller
             if ($etablissement->photo_principale) {
                 Storage::disk('public')->delete($etablissement->photo_principale);
             }
+            if ($etablissement->menu) {
+                Storage::disk('public')->delete($etablissement->menu);
+            }
             foreach ($etablissement->photos as $photo) {
                 Storage::disk('public')->delete($photo->url);
             }
@@ -368,6 +390,9 @@ class AdminController extends Controller
                 'mimes:' . self::PHOTO_MIMES,
             ],
 
+            // Menu — image ou PDF
+            'menu' => ['nullable', 'file', 'mimes:' . self::MENU_MIMES],
+
             'services'   => ['nullable', 'array', 'max:8'],
             'services.*' => ['nullable', 'string', 'max:60'],
 
@@ -381,15 +406,16 @@ class AdminController extends Controller
             'user_id'    => ['nullable', 'exists:users,id'],
             'en_vedette' => ['nullable', 'boolean'],
         ], [
-            'nom.min'          => 'Le nom doit comporter au moins 2 caractères.',
-            'description.min'  => 'La description doit comporter au moins 30 caractères.',
-            'description.max'  => 'La description ne peut pas dépasser 2 000 caractères.',
-            'email.email'      => "L'adresse email n'est pas valide.",
-            'site_web.url'     => 'Le site web doit être une URL valide (ex : https://monsite.com).',
+            'nom.min'                => 'Le nom doit comporter au moins 2 caractères.',
+            'description.min'        => 'La description doit comporter au moins 30 caractères.',
+            'description.max'        => 'La description ne peut pas dépasser 2 000 caractères.',
+            'email.email'            => "L'adresse email n'est pas valide.",
+            'site_web.url'           => 'Le site web doit être une URL valide (ex : https://monsite.com).',
             'photo_principale.mimes' => 'Format accepté : JPG, PNG ou WebP.',
             'photos.*.mimes'         => 'Formats acceptés : JPG, PNG ou WebP.',
-            'services.max'     => 'Maximum 8 services.',
-            'statut.in'        => "Le statut choisi n'est pas valide.",
+            'menu.mimes'             => 'Le menu doit être une image (JPG, PNG, WebP) ou un PDF.',
+            'services.max'           => 'Maximum 8 services.',
+            'statut.in'              => "Le statut choisi n'est pas valide.",
         ]);
 
         $this->validateHorairesConsistency($request);
@@ -494,15 +520,12 @@ class AdminController extends Controller
             return;
         }
 
-        // Aucune limite de nombre de photos
-        $ordre  = $etablissement->photos()->max('ordre') ?? 0;
+        $ordre = $etablissement->photos()->max('ordre') ?? 0;
 
         foreach ($request->file('photos', []) as $file) {
-            $path = $file->store('etablissements/galerie', 'public');
-
             Photo::create([
                 'etablissement_id' => $etablissement->id,
-                'url'              => $path,
+                'url'              => $file->store('etablissements/galerie', 'public'),
                 'ordre'            => ++$ordre,
             ]);
         }

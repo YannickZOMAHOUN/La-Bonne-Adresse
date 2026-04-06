@@ -194,31 +194,6 @@
             {{-- HORAIRES --}}
             @include('proprietaire.partials.horaires', ['horaires' => null])
 
-            {{-- SERVICES --}}
-            <div class="form-section">
-                <h2>✅ Services proposés</h2>
-                <p class="form-hint">
-                    Ajoutez jusqu'à 8 services. Ex : WiFi, Climatisation, Parking, Petit-déjeuner…
-                </p>
-
-                <div class="services-inputs" id="servicesInputs">
-                    @php $servicesOld = old('services', []); @endphp
-                    @for($i = 0; $i < max(3, count($servicesOld)); $i++)
-                        <input
-                            type="text"
-                            name="services[]"
-                            value="{{ $servicesOld[$i] ?? '' }}"
-                            placeholder="Service {{ $i + 1 }}"
-                            maxlength="60"
-                        />
-                    @endfor
-                </div>
-
-                <button type="button" class="btn-add-service" onclick="addService()">
-                    ➕ Ajouter un service
-                </button>
-            </div>
-
             {{-- PHOTO PRINCIPALE --}}
             <div class="form-section">
                 <h2>📸 Photo principale</h2>
@@ -280,6 +255,58 @@
                 </div>
 
                 <div id="galeriePreview" class="galerie-preview-grid"></div>
+            </div>
+
+            {{-- MENU --}}
+            <div class="form-section">
+                <h2>🍽️ Menu <small style="font-weight:400; color:var(--muted)">(optionnel)</small></h2>
+                <p class="form-hint">
+                    Partagez une photo ou un PDF de votre menu.
+                    Les visiteurs pourront le consulter directement sur votre fiche.
+                </p>
+
+                <div class="upload-zone" id="menuZone">
+                    <input type="file" id="menu" name="menu"
+                           accept="image/jpeg,image/png,image/webp,application/pdf"
+                           onchange="previewMenu(this)" />
+                    <label for="menu" class="upload-label">
+                        <span class="upload-icon">🍽️</span>
+                        <span class="upload-text">Ajouter votre menu</span>
+                        <span class="upload-hint">JPG, PNG, WebP ou PDF</span>
+                    </label>
+                    <div id="menuPreview" class="photo-preview-wrap" style="display:none">
+                        <img id="menuImg" src="" alt="Aperçu menu" />
+                        <div>
+                            <p id="menuFileName" style="font-size:0.83rem;font-weight:600;color:var(--dark)"></p>
+                            <button type="button" class="btn-remove-preview" onclick="removeMenu()">✕ Supprimer</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- SERVICES --}}
+            <div class="form-section">
+                <h2>✅ Services proposés</h2>
+                <p class="form-hint">
+                    Ajoutez jusqu'à 8 services. Ex : WiFi, Climatisation, Parking, Petit-déjeuner…
+                </p>
+
+                <div class="services-inputs" id="servicesInputs">
+                    @php $servicesOld = old('services', []); @endphp
+                    @for($i = 0; $i < max(3, count($servicesOld)); $i++)
+                        <input
+                            type="text"
+                            name="services[]"
+                            value="{{ $servicesOld[$i] ?? '' }}"
+                            placeholder="Service {{ $i + 1 }}"
+                            maxlength="60"
+                        />
+                    @endfor
+                </div>
+
+                <button type="button" class="btn-add-service" onclick="addService()">
+                    ➕ Ajouter un service
+                </button>
             </div>
 
             {{-- ACTIONS --}}
@@ -482,6 +509,36 @@ function previewGalerie(input) {
         note.textContent = `⚠️ Vous avez sélectionné ${input.files.length} photos. Le maximum autorisé est ${max}.`;
         container.appendChild(note);
     }
+}
+
+// Aperçu menu
+function previewMenu(input) {
+    if (!input.files || !input.files[0]) return;
+    const file  = input.files[0];
+    const isPdf = file.type === 'application/pdf';
+    const preview = document.getElementById('menuPreview');
+    const img     = document.getElementById('menuImg');
+    const name    = document.getElementById('menuFileName');
+
+    document.querySelector('#menuZone .upload-label').style.display = 'none';
+    name.textContent = isPdf ? ('📄 ' + file.name) : file.name;
+
+    if (isPdf) {
+        img.style.display = 'none';
+    } else {
+        const reader = new FileReader();
+        reader.onload = e => { img.src = e.target.result; img.style.display = 'block'; };
+        reader.readAsDataURL(file);
+    }
+
+    preview.style.display = 'flex';
+}
+
+function removeMenu() {
+    document.getElementById('menu').value = '';
+    document.getElementById('menuPreview').style.display = 'none';
+    document.getElementById('menuImg').style.display = 'none';
+    document.querySelector('#menuZone .upload-label').style.display = 'flex';
 }
 </script>
 @endpush
