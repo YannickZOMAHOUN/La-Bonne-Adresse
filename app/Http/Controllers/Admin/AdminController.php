@@ -25,8 +25,7 @@ class AdminController extends Controller
     private const LOCAL_PREFIX  = '01';
 
     private const PHOTO_MIMES  = 'jpg,jpeg,png,webp';
-    private const PHOTO_MAX_KB = 3072; // 3 Mo
-    private const GALERIE_MAX  = 6;
+    // Pas de limite de taille ni de nombre de photos
 
     private const JOURS = [
         'Lundi', 'Mardi', 'Mercredi', 'Jeudi',
@@ -180,15 +179,10 @@ class AdminController extends Controller
         }
 
         // CORRECTIF : Gestion sécurisée du user_id avant la mise à jour
-        // Si le formulaire envoie un user_id vide (par exemple, l'option
-        // vide est sélectionnée ou si le champ n'est pas envoyé)
         if (empty($validated['user_id'])) {
-            // Option 1 : Conserver l'ancien propriétaire s'il existe déjà
             if ($etablissement->user_id) {
                 $validated['user_id'] = $etablissement->user_id;
-            }
-            // Option 2 : Assigner à l'admin connecté si l'établissement n'avait pas de propriétaire
-            else {
+            } else {
                 $validated['user_id'] = auth()->id();
             }
         }
@@ -360,19 +354,18 @@ class AdminController extends Controller
             'email'    => ['nullable', 'email', 'max:150'],
             'site_web' => ['nullable', 'url', 'max:255'],
 
+            // Photo principale — sans limite de taille ni de dimensions minimales imposées
             'photo_principale' => [
-                'nullable', 'image',
+                'nullable',
+                'image',
                 'mimes:' . self::PHOTO_MIMES,
-                'max:'   . self::PHOTO_MAX_KB,
-                'dimensions:min_width=400,min_height=300',
             ],
 
-            'photos'   => ['nullable', 'array', 'max:' . self::GALERIE_MAX],
+            // Galerie — sans limite de nombre ni de taille
+            'photos'   => ['nullable', 'array'],
             'photos.*' => [
                 'image',
-                'mimes:'  . self::PHOTO_MIMES,
-                'max:'    . self::PHOTO_MAX_KB,
-                'dimensions:min_width=400,min_height=300',
+                'mimes:' . self::PHOTO_MIMES,
             ],
 
             'services'   => ['nullable', 'array', 'max:8'],
@@ -388,20 +381,15 @@ class AdminController extends Controller
             'user_id'    => ['nullable', 'exists:users,id'],
             'en_vedette' => ['nullable', 'boolean'],
         ], [
-            'nom.min'                     => 'Le nom doit comporter au moins 2 caractères.',
-            'description.min'             => 'La description doit comporter au moins 30 caractères.',
-            'description.max'             => 'La description ne peut pas dépasser 2 000 caractères.',
-            'email.email'                 => "L'adresse email n'est pas valide.",
-            'site_web.url'                => 'Le site web doit être une URL valide (ex : https://monsite.com).',
-            'photo_principale.max'        => 'La photo principale ne doit pas dépasser 3 Mo.',
-            'photo_principale.mimes'      => 'Format accepté : JPG, PNG ou WebP.',
-            'photo_principale.dimensions' => 'La photo principale doit faire au moins 400×300 px.',
-            'photos.max'                  => 'Maximum 6 photos de galerie.',
-            'photos.*.max'                => 'Chaque photo ne doit pas dépasser 3 Mo.',
-            'photos.*.mimes'              => 'Formats acceptés : JPG, PNG ou WebP.',
-            'photos.*.dimensions'         => 'Chaque photo doit faire au moins 400×300 px.',
-            'services.max'                => 'Maximum 8 services.',
-            'statut.in'                   => 'Le statut choisi n\'est pas valide.',
+            'nom.min'          => 'Le nom doit comporter au moins 2 caractères.',
+            'description.min'  => 'La description doit comporter au moins 30 caractères.',
+            'description.max'  => 'La description ne peut pas dépasser 2 000 caractères.',
+            'email.email'      => "L'adresse email n'est pas valide.",
+            'site_web.url'     => 'Le site web doit être une URL valide (ex : https://monsite.com).',
+            'photo_principale.mimes' => 'Format accepté : JPG, PNG ou WebP.',
+            'photos.*.mimes'         => 'Formats acceptés : JPG, PNG ou WebP.',
+            'services.max'     => 'Maximum 8 services.',
+            'statut.in'        => "Le statut choisi n'est pas valide.",
         ]);
 
         $this->validateHorairesConsistency($request);
@@ -506,17 +494,10 @@ class AdminController extends Controller
             return;
         }
 
-        $existingCount  = $etablissement->photos()->count();
-        $remainingSlots = max(0, self::GALERIE_MAX - $existingCount);
-
-        if ($remainingSlots === 0) {
-            return;
-        }
-
+        // Aucune limite de nombre de photos
         $ordre  = $etablissement->photos()->max('ordre') ?? 0;
-        $photos = array_slice($request->file('photos', []), 0, $remainingSlots);
 
-        foreach ($photos as $file) {
+        foreach ($request->file('photos', []) as $file) {
             $path = $file->store('etablissements/galerie', 'public');
 
             Photo::create([

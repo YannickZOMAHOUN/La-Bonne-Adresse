@@ -298,7 +298,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Galerie <small style="font-weight:400; color:var(--muted)">(max. 6 photos)</small></label>
+                    <label>Galerie</label>
                     @if(isset($etablissement) && $etablissement->photos->count() > 0)
                         <div class="galerie-existante" style="margin-bottom:0.5rem">
                             @foreach($etablissement->photos as $photo)
