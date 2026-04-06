@@ -197,7 +197,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="description">Description * <small style="font-weight:400; color:var(--muted)">(min. 30 caractères)</small></label>
+                    <label for="description">Description *</label>
                     <textarea id="description" name="description" rows="5" maxlength="2000"
                               placeholder="Décrivez l'établissement, sa spécialité, son ambiance..." required
                     >{{ old('description', $etablissement->description ?? '') }}</textarea>

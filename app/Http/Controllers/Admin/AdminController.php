@@ -342,7 +342,7 @@ class AdminController extends Controller
     {
         $validated = $request->validate([
             'nom'             => ['required', 'string', 'min:2', 'max:150'],
-            'description'     => ['required', 'string', 'min:30', 'max:2000'],
+            'description'      => ['required', 'string', 'max:2000'],
             'ville_id'        => ['required', 'exists:villes,id'],
             'categorie_id'    => ['required', 'exists:categories,id'],
             'adresse'         => ['required', 'string', 'min:5', 'max:255'],
