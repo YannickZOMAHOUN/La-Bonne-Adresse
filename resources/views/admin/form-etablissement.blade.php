@@ -12,14 +12,26 @@
         <div class="form-header">
             <a href="{{ route('admin.etablissements') }}" class="btn-back">← Retour</a>
             <div>
-                <span class="admin-badge">⚙️ Administration</span>
                 <h1>{{ isset($etablissement) ? '✏️ Modifier un établissement' : '➕ Ajouter un établissement' }}</h1>
             </div>
         </div>
 
+        {{-- ── BADGE ADMIN ──────────────────────────────────────────────── --}}
+        <div class="admin-form-badge">
+            <span>⚙️ Espace administration</span>
+            @isset($etablissement)
+                <span class="badge badge--{{ $etablissement->statut }}">
+                    @if($etablissement->statut === 'actif') ✅ Actif
+                    @elseif($etablissement->statut === 'en_attente') ⏳ En attente
+                    @else 🚫 Suspendu
+                    @endif
+                </span>
+            @endisset
+        </div>
+
         {{-- ── ERREURS ──────────────────────────────────────────────────── --}}
         @if($errors->any())
-            <div class="alert alert-error">
+            <div class="alert alert-error" style="margin-bottom:1.5rem; border-radius:10px">
                 @foreach($errors->all() as $error)
                     <div>• {{ $error }}</div>
                 @endforeach
@@ -33,7 +45,6 @@
                 ? route('admin.update-etablissement', $etablissement)
                 : route('admin.store-etablissement') }}"
             enctype="multipart/form-data"
-            class="etab-form"
             id="etablissementForm"
         >
             @csrf
@@ -41,10 +52,8 @@
                 @method('PUT')
             @endisset
 
-            {{-- ══════════════════════════════════════════════════════════
-                 BLOC ADMIN — statut, propriétaire, vedette
-            ══════════════════════════════════════════════════════════ --}}
-            <div class="form-section form-section--admin">
+            {{-- ══ BLOC ADMIN ═══════════════════════════════════════════ --}}
+            <div class="form-section admin-section-highlight">
                 <h2>⚙️ Paramètres administrateur</h2>
 
                 <div class="form-row">
@@ -69,10 +78,10 @@
                     <div class="form-group">
                         <label for="user_id">
                             Propriétaire
-                            <small style="font-weight:400; color:#888">(requis si l'établissement doit avoir un propriétaire)</small>
+                            <span class="form-hint" style="display:inline; font-weight:400">(optionnel)</span>
                         </label>
-                        <select id="user_id" name="user_id" required>
-                            <option value="">— Sélectionner un propriétaire —</option>
+                        <select id="user_id" name="user_id">
+                            <option value="">— Aucun / conserver l'actuel —</option>
                             @foreach($proprietaires as $proprio)
                                 <option value="{{ $proprio->id }}"
                                     {{ old('user_id', $etablissement->user_id ?? '') == $proprio->id ? 'selected' : '' }}>
@@ -80,28 +89,34 @@
                                 </option>
                             @endforeach
                         </select>
+                        @isset($etablissement)
+                            @if($etablissement->user)
+                                <p class="form-hint">Actuel : <strong>{{ $etablissement->user->nom }}</strong>. Laissez vide pour conserver.</p>
+                            @else
+                                <p class="form-hint" style="color:var(--warning)">⚠️ Aucun propriétaire assigné.</p>
+                            @endif
+                        @endisset
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label class="checkbox-label">
+                    <div class="form-check">
                         <input
                             type="checkbox"
+                            id="en_vedette"
                             name="en_vedette"
                             value="1"
                             {{ old('en_vedette', $etablissement->en_vedette ?? false) ? 'checked' : '' }}
                         />
-                        <span>⭐ Mettre en vedette</span>
-                    </label>
-                    <small class="field-help" style="margin-left:1.6rem">
-                        Apparaît dans les sections "Coups de cœur" et "À la une".
-                    </small>
+                        <label for="en_vedette" style="font-size:0.9rem; font-weight:500; cursor:pointer">
+                            ⭐ Mettre en vedette
+                            <span class="form-hint" style="display:inline; font-weight:400">— apparaît dans les sections "Coups de cœur"</span>
+                        </label>
+                    </div>
                 </div>
             </div>
 
-            {{-- ══════════════════════════════════════════════════════════
-                 INFORMATIONS PRINCIPALES
-            ══════════════════════════════════════════════════════════ --}}
+            {{-- ══ INFORMATIONS PRINCIPALES ═════════════════════════════ --}}
             <div class="form-section">
                 <h2>📋 Informations principales</h2>
 
@@ -118,7 +133,6 @@
                             @endforeach
                         </select>
                     </div>
-
                     <div class="form-group">
                         <label for="categorie_id">Catégorie *</label>
                         <select id="categorie_id" name="categorie_id" required>
@@ -135,61 +149,37 @@
 
                 <div class="form-group">
                     <label for="nom">Nom de l'établissement *</label>
-                    <input
-                        type="text"
-                        id="nom"
-                        name="nom"
-                        value="{{ old('nom', $etablissement->nom ?? '') }}"
-                        placeholder="ex : Restaurant Le Palmier"
-                        maxlength="150"
-                        required
-                    />
+                    <input type="text" id="nom" name="nom"
+                           value="{{ old('nom', $etablissement->nom ?? '') }}"
+                           placeholder="ex : Restaurant Le Palmier"
+                           maxlength="150" required />
                 </div>
 
                 <div class="form-group">
-                    <label for="description">
-                        Description * <small>(minimum 30 caractères)</small>
-                    </label>
-                    <textarea
-                        id="description"
-                        name="description"
-                        rows="5"
-                        maxlength="2000"
-                        placeholder="Décrivez l'établissement, sa spécialité, son ambiance..."
-                        required
-                    >{{ old('description', $etablissement->description ?? '') }}</textarea>
-                    <small class="field-help">Soyez clair et précis : spécialité, ambiance, clientèle, points forts…</small>
+                    <label for="description">Description * <small style="font-weight:400; color:var(--muted)">(min. 30 caractères)</small></label>
+                    <textarea id="description" name="description" rows="5" maxlength="2000"
+                              placeholder="Décrivez l'établissement, sa spécialité, son ambiance..."
+                              required>{{ old('description', $etablissement->description ?? '') }}</textarea>
+                    <p class="form-hint">Soyez précis : spécialité, ambiance, clientèle, points forts…</p>
                 </div>
 
                 <div class="form-group">
                     <label for="adresse">Adresse complète *</label>
-                    <input
-                        type="text"
-                        id="adresse"
-                        name="adresse"
-                        value="{{ old('adresse', $etablissement->adresse ?? '') }}"
-                        placeholder="ex : Quartier Cadjehoun, près du Carrefour..."
-                        maxlength="255"
-                        required
-                    />
+                    <input type="text" id="adresse" name="adresse"
+                           value="{{ old('adresse', $etablissement->adresse ?? '') }}"
+                           placeholder="ex : Quartier Cadjehoun, près du Carrefour..."
+                           maxlength="255" required />
                 </div>
 
                 <div class="form-group">
                     <label for="fourchette_prix">Fourchette de prix</label>
-                    <input
-                        type="text"
-                        id="fourchette_prix"
-                        name="fourchette_prix"
-                        value="{{ old('fourchette_prix', $etablissement->fourchette_prix ?? '') }}"
-                        placeholder="ex : 1 500 – 5 000 FCFA"
-                        maxlength="100"
-                    />
+                    <input type="text" id="fourchette_prix" name="fourchette_prix"
+                           value="{{ old('fourchette_prix', $etablissement->fourchette_prix ?? '') }}"
+                           placeholder="ex : 1 500 – 5 000 FCFA" maxlength="100" />
                 </div>
             </div>
 
-            {{-- ══════════════════════════════════════════════════════════
-                 CONTACTS
-            ══════════════════════════════════════════════════════════ --}}
+            {{-- ══ CONTACTS ═════════════════════════════════════════════ --}}
             <div class="form-section">
                 <h2>📞 Contacts</h2>
 
@@ -198,790 +188,450 @@
                         <label for="telephone">Téléphone</label>
                         <div class="phone-input-group">
                             <span class="phone-prefix">+229</span>
-                            <input
-                                type="text"
-                                id="telephone"
-                                name="telephone"
-                                value="{{ old('telephone', $etablissement->telephone ?? '01') }}"
-                                placeholder="01 00 00 00 00"
-                                inputmode="numeric"
-                                maxlength="14"
-                                data-benin-phone
-                                data-required="false"
-                            />
+                            <input type="text" id="telephone" name="telephone"
+                                   value="{{ old('telephone', $etablissement->telephone ?? '01') }}"
+                                   placeholder="01 00 00 00 00"
+                                   inputmode="numeric" maxlength="14"
+                                   data-benin-phone data-required="false" />
                         </div>
-                        <small class="field-help">
-                            Le <strong>+229</strong> est ajouté automatiquement.
-                            Si vous laissez simplement <strong>01</strong>, le champ sera ignoré.
-                        </small>
+                        <p class="form-hint">Laissez <strong>01</strong> pour ignorer ce champ.</p>
                     </div>
-
                     <div class="form-group">
                         <label for="whatsapp">WhatsApp</label>
                         <div class="phone-input-group">
                             <span class="phone-prefix">+229</span>
-                            <input
-                                type="text"
-                                id="whatsapp"
-                                name="whatsapp"
-                                value="{{ old('whatsapp', $etablissement->whatsapp ?? '01') }}"
-                                placeholder="01 00 00 00 00"
-                                inputmode="numeric"
-                                maxlength="14"
-                                data-benin-phone
-                                data-required="false"
-                            />
+                            <input type="text" id="whatsapp" name="whatsapp"
+                                   value="{{ old('whatsapp', $etablissement->whatsapp ?? '01') }}"
+                                   placeholder="01 00 00 00 00"
+                                   inputmode="numeric" maxlength="14"
+                                   data-benin-phone data-required="false" />
                         </div>
-                        <small class="field-help">
-                            Le <strong>+229</strong> est ajouté automatiquement.
-                            Si vous laissez simplement <strong>01</strong>, le champ sera ignoré.
-                        </small>
+                        <p class="form-hint">Même principe que le téléphone.</p>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="email">Email</label>
-                    <input
-                        type="email"
-                        id="email"
-                        name="email"
-                        value="{{ old('email', $etablissement->email ?? '') }}"
-                        placeholder="ex : contact@exemple.com"
-                        maxlength="150"
-                    />
-                </div>
-
-                <div class="form-group">
-                    <label for="site_web">Site web</label>
-                    <input
-                        type="url"
-                        id="site_web"
-                        name="site_web"
-                        value="{{ old('site_web', $etablissement->site_web ?? '') }}"
-                        placeholder="ex : https://www.monsite.com"
-                        maxlength="255"
-                    />
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" name="email"
+                               value="{{ old('email', $etablissement->email ?? '') }}"
+                               placeholder="contact@exemple.com" maxlength="150" />
+                    </div>
+                    <div class="form-group">
+                        <label for="site_web">Site web</label>
+                        <input type="url" id="site_web" name="site_web"
+                               value="{{ old('site_web', $etablissement->site_web ?? '') }}"
+                               placeholder="https://..." maxlength="255" />
+                    </div>
                 </div>
             </div>
 
-            {{-- ══════════════════════════════════════════════════════════
-                 PHOTOS
-            ══════════════════════════════════════════════════════════ --}}
+            {{-- ══ PHOTOS ════════════════════════════════════════════════ --}}
             <div class="form-section">
                 <h2>📸 Photos</h2>
 
+                {{-- Photo principale --}}
                 <div class="form-group">
-                    <label for="photo_principale">Photo principale</label>
+                    <label>Photo principale</label>
                     @if(isset($etablissement) && $etablissement->photo_principale)
                         <div class="current-photo">
                             <img src="{{ Storage::url($etablissement->photo_principale) }}" alt="Photo principale actuelle">
-                            <label class="checkbox-label">
-                                <input type="checkbox" name="supprimer_photo_principale" value="1" />
-                                <span>Supprimer la photo principale</span>
-                            </label>
+                            <div>
+                                <p style="font-size:0.82rem; font-weight:600; color:var(--dark); margin-bottom:0.4rem">Photo actuelle</p>
+                                <div class="form-check">
+                                    <input type="checkbox" id="supprimer_photo_principale"
+                                           name="supprimer_photo_principale" value="1" />
+                                    <label for="supprimer_photo_principale" style="font-size:0.83rem; color:var(--danger); cursor:pointer">
+                                        Supprimer cette photo
+                                    </label>
+                                </div>
+                            </div>
                         </div>
                     @endif
-                    <input
-                        type="file"
-                        id="photo_principale"
-                        name="photo_principale"
-                        accept="image/jpeg,image/png,image/webp"
-                    />
-                    <small class="field-help">
-                        Format : JPG, PNG ou WebP. Taille max : 3 Mo. Dimensions min : 400x300 px.
-                    </small>
+                    <div class="upload-zone" id="mainPhotoZone">
+                        <input type="file" id="photo_principale" name="photo_principale"
+                               accept="image/jpeg,image/png,image/webp"
+                               onchange="previewMainPhoto(this)" />
+                        <label for="photo_principale" class="upload-label">
+                            <span class="upload-icon">🖼️</span>
+                            <span class="upload-text">
+                                {{ isset($etablissement) && $etablissement->photo_principale ? 'Remplacer la photo principale' : 'Choisir une photo principale' }}
+                            </span>
+                            <span class="upload-hint">JPG, PNG, WebP — min. 400×300 px — max. 3 Mo</span>
+                        </label>
+                        <div id="mainPhotoPreview" class="photo-preview-wrap" style="display:none">
+                            <img id="mainPhotoImg" src="" alt="Aperçu" />
+                            <button type="button" class="btn-remove-preview" onclick="removeMainPhoto()">✕ Supprimer</button>
+                        </div>
+                    </div>
                 </div>
 
+                {{-- Galerie --}}
                 <div class="form-group">
-                    <label>Photos de la galerie <small>(max 6)</small></label>
-                    <div class="gallery-photos-preview">
-                        @if(isset($etablissement) && $etablissement->photos->count() > 0)
+                    <label>Galerie de photos <small style="font-weight:400; color:var(--muted)">(max. 6)</small></label>
+
+                    @if(isset($etablissement) && $etablissement->photos->count() > 0)
+                        <div class="galerie-existante">
                             @foreach($etablissement->photos as $photo)
-                                <div class="gallery-photo-item">
-                                    <img src="{{ Storage::url($photo->url) }}" alt="Photo de galerie">
-                                    <label class="checkbox-label">
-                                        <input type="checkbox" name="supprimer_photos[]" value="{{ $photo->id }}" />
-                                        <span>Supprimer</span>
+                                <div class="galerie-thumb">
+                                    <img src="{{ Storage::url($photo->url) }}" alt="Photo galerie">
+                                    <label style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0);border-radius:8px;cursor:pointer;transition:background 0.2s"
+                                           onmouseover="this.style.background='rgba(220,38,38,0.5)'"
+                                           onmouseout="this.style.background='rgba(0,0,0,0)'"
+                                           title="Cocher pour supprimer">
+                                        <input type="checkbox" name="supprimer_photos[]"
+                                               value="{{ $photo->id }}"
+                                               style="position:absolute;top:4px;right:4px;width:16px;height:16px;accent-color:var(--danger)" />
                                     </label>
                                 </div>
                             @endforeach
-                        @endif
+                        </div>
+                        <p class="form-hint" style="margin-bottom:0.8rem">Cochez les photos à supprimer, puis ajoutez-en de nouvelles ci-dessous.</p>
+                    @endif
+
+                    <div class="upload-zone">
+                        <input type="file" id="photos" name="photos[]" multiple
+                               accept="image/jpeg,image/png,image/webp"
+                               onchange="previewGalerie(this)" />
+                        <label for="photos" class="upload-label">
+                            <span class="upload-icon">📷</span>
+                            <span class="upload-text">Choisir des photos de galerie</span>
+                            <span class="upload-hint">Maintenir Ctrl pour sélection multiple · max. 3 Mo chacune</span>
+                        </label>
                     </div>
-                    <input
-                        type="file"
-                        name="photos[]"
-                        accept="image/jpeg,image/png,image/webp"
-                        multiple
-                    />
-                    <small class="field-help">
-                        Format : JPG, PNG ou WebP. Taille max : 3 Mo par photo. Dimensions min : 400x300 px.
-                    </small>
+                    <div id="galeriePreview" class="galerie-preview-grid"></div>
                 </div>
             </div>
 
-            {{-- ══════════════════════════════════════════════════════════
-                 SERVICES
-            ══════════════════════════════════════════════════════════ --}}
+            {{-- ══ SERVICES ══════════════════════════════════════════════ --}}
             <div class="form-section">
-                <h2>✨ Services <small>(max 8)</small></h2>
-                <div id="services-list">
+                <h2>✅ Services proposés <small style="font-weight:400; font-size:0.85rem; color:var(--muted)">(max. 8)</small></h2>
+                <p class="form-hint" style="margin-bottom:1rem">Ex : WiFi, Climatisation, Parking, Petit-déjeuner, Piscine…</p>
+
+                <div class="services-inputs" id="servicesInputs">
+                    @php $servicesOld = old('services', []); @endphp
                     @if(isset($etablissement) && $etablissement->services->count() > 0)
                         @foreach($etablissement->services as $service)
-                            <div class="form-group form-group--service">
-                                <input type="text" name="services[]" value="{{ $service->libelle }}" maxlength="60" placeholder="Nom du service" />
-                                <button type="button" class="btn-remove-service">×</button>
-                            </div>
+                            <input type="text" name="services[]"
+                                   value="{{ old('services.' . $loop->index, $service->libelle) }}"
+                                   placeholder="Service" maxlength="60" />
                         @endforeach
                     @else
-                        <div class="form-group form-group--service">
-                            <input type="text" name="services[]" maxlength="60" placeholder="Nom du service" />
-                            <button type="button" class="btn-remove-service">×</button>
-                        </div>
+                        @for($i = 0; $i < max(3, count($servicesOld)); $i++)
+                            <input type="text" name="services[]"
+                                   value="{{ $servicesOld[$i] ?? '' }}"
+                                   placeholder="Service {{ $i + 1 }}" maxlength="60" />
+                        @endfor
                     @endif
                 </div>
-                <button type="button" id="add-service" class="btn-add-service">＋ Ajouter un service</button>
+                <button type="button" class="btn-add-service" onclick="addService()">
+                    ➕ Ajouter un service
+                </button>
             </div>
 
-            {{-- ══════════════════════════════════════════════════════════
-                 HORAIRES
-            ══════════════════════════════════════════════════════════ --}}
+            {{-- ══ HORAIRES ══════════════════════════════════════════════ --}}
             <div class="form-section">
-                <h2>⏰ Horaires d'ouverture</h2>
-                <div class="horaires-grid">
+                <h2>🕐 Horaires d'ouverture <small style="font-weight:400; font-size:0.85rem; color:var(--muted)">(optionnel)</small></h2>
+
+                <div class="horaires-admin-grid">
                     @foreach($jours as $jour)
                         @php
-                            $horaire = old('horaires.' . $jour, $etablissement->horaires[$jour] ?? null);
-                            $ouvert = $horaire !== 'Fermé';
-                            $debut = $ouvert ? (explode(' – ', $horaire)[0] ?? '09:00') : '09:00';
-                            $fin = $ouvert ? (explode(' – ', $horaire)[1] ?? '23:00') : '23:00';
+                            $horaires = $etablissement->horaires ?? [];
+                            $horaire  = old("horaires.{$jour}", $horaires[$jour] ?? null);
+                            $ouvert   = !is_null($horaire) && $horaire !== 'Fermé';
+                            $debut    = $ouvert ? (explode(' – ', $horaire)[0] ?? '08:00') : '08:00';
+                            $fin      = $ouvert ? (explode(' – ', $horaire)[1] ?? '18:00') : '18:00';
                         @endphp
-                        <div class="horaire-item">
-                            <label class="checkbox-label">
-                                <input type="checkbox" name="horaires[{{ $jour }}][ouvert]" value="1" {{ $ouvert ? 'checked' : '' }} data-jour="{{ $jour }}" />
-                                <span>{{ $jour }}</span>
+                        <div class="horaire-admin-row">
+                            <label class="horaire-toggle-label">
+                                <input type="checkbox"
+                                       name="horaires[{{ $jour }}][ouvert]"
+                                       value="1"
+                                       {{ $ouvert ? 'checked' : '' }}
+                                       onchange="toggleHoraire(this)" />
+                                <span class="horaire-jour-name">{{ substr($jour, 0, 3) }}</span>
                             </label>
-                            <input type="time" name="horaires[{{ $jour }}][debut]" value="{{ $debut }}" {{ !$ouvert ? 'disabled' : '' }} data-jour="{{ $jour }}" />
-                            <span>–</span>
-                            <input type="time" name="horaires[{{ $jour }}][fin]" value="{{ $fin }}" {{ !$ouvert ? 'disabled' : '' }} data-jour="{{ $jour }}" />
+                            <div class="horaire-times-wrap {{ $ouvert ? '' : 'horaire-disabled' }}">
+                                <input type="time" name="horaires[{{ $jour }}][debut]"
+                                       value="{{ $debut }}"
+                                       {{ !$ouvert ? 'disabled' : '' }}
+                                       class="horaire-time-input" />
+                                <span class="horaire-sep">–</span>
+                                <input type="time" name="horaires[{{ $jour }}][fin]"
+                                       value="{{ $fin }}"
+                                       {{ !$ouvert ? 'disabled' : '' }}
+                                       class="horaire-time-input" />
+                            </div>
+                            <span class="horaire-closed-label {{ $ouvert ? 'hidden' : '' }}">Fermé</span>
                         </div>
                     @endforeach
                 </div>
             </div>
 
-            {{-- ══════════════════════════════════════════════════════════
-                 BOUTONS DE SOUMISSION
-            ══════════════════════════════════════════════════════════ --}}
+            {{-- ══ ACTIONS ════════════════════════════════════════════════ --}}
             <div class="form-actions">
+                <a href="{{ route('admin.etablissements') }}" class="btn-secondary">Annuler</a>
                 <button type="submit" class="btn-submit">
-                    {{ isset($etablissement) ? 'Enregistrer les modifications' : 'Créer l\'établissement' }}
+                    {{ isset($etablissement) ? '💾 Enregistrer les modifications' : '🏪 Créer l\'établissement' }}
                 </button>
             </div>
-        </form>
 
+        </form>
     </div>
 </div>
 
-{{-- ── STYLES ─────────────────────────────────────────────────── --}}
+@push('styles')
 <style>
-    .form-page {
-        max-width: 900px;
-        margin: 2rem auto;
-        padding: 1.5rem;
-        background: #fff;
-        border-radius: 12px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-    }
-    .form-header {
-        display: flex;
-        align-items: center;
-        gap: 1.5rem;
-        margin-bottom: 2rem;
-        padding-bottom: 1.5rem;
-        border-bottom: 1px solid #eee;
-    }
-    .form-header .btn-back {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        background: #f1f5f9;
-        color: #333;
-        font-size: 1.2rem;
-        text-decoration: none;
-        transition: background 0.2s;
-    }
-    .form-header .btn-back:hover { background: #e2e8f0; }
-    .form-header > div {
-        display: flex;
-        flex-direction: column;
-    }
-    .admin-badge {
-        background: #e0f2fe;
-        color: #0284c7;
-        padding: 0.25rem 0.75rem;
-        border-radius: 9999px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        align-self: flex-start;
-        margin-bottom: 0.5rem;
-    }
-    .form-header h1 {
-        font-size: 1.8rem;
-        font-weight: 700;
-        color: #1a1a1a;
-        margin: 0;
-    }
+/* ── Badge admin en haut de page ──────────────────────────── */
+.admin-form-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 10px;
+    padding: 0.65rem 1.1rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #92400e;
+    margin-bottom: 1.8rem;
+}
 
-    .alert {
-        padding: 1rem 1.5rem;
-        border-radius: 8px;
-        margin-bottom: 1.5rem;
-        font-weight: 500;
-        line-height: 1.5;
-    }
-    .alert-error {
-        background: #fee2e2;
-        color: #991b1b;
-        border: 1px solid #fca5a5;
-    }
+/* ── Section admin surlignée ──────────────────────────────── */
+.admin-section-highlight {
+    border-color: #fde68a !important;
+    background: #fffdf5 !important;
+}
+.admin-section-highlight h2 {
+    color: #92400e !important;
+}
 
-    .form-section {
-        background: #f9fafb;
-        border-radius: 10px;
-        padding: 1.5rem;
-        margin-bottom: 1.5rem;
-        border: 1px solid #f3f4f6;
-    }
-    .form-section h2 {
-        font-size: 1.3rem;
-        font-weight: 600;
-        color: #333;
-        margin-top: 0;
-        margin-bottom: 1.5rem;
-        padding-bottom: 0.75rem;
-        border-bottom: 1px solid #eee;
-    }
-    .form-section--admin {
-        background: #fffbeb;
-        border-color: #fef3c7;
-    }
-    .form-section--admin h2 {
-        color: #b45309;
-        border-color: #fde68a;
-    }
+/* ── Téléphone béninois ───────────────────────────────────── */
+.phone-input-group {
+    display: flex;
+    align-items: stretch;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--cream);
+    transition: border-color 0.2s;
+}
+.phone-input-group:focus-within {
+    border-color: var(--green);
+    background: #fff;
+}
+.phone-prefix {
+    padding: 0.65rem 0.9rem;
+    background: var(--cream);
+    border-right: 1px solid var(--border);
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+}
+.phone-input-group input {
+    border: none !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    flex: 1;
+    padding: 0.65rem 0.9rem;
+    font-size: 0.93rem;
+    outline: none;
+    box-shadow: none !important;
+}
 
-    .form-row {
-        display: flex;
-        gap: 1.5rem;
-        margin-bottom: 1.5rem;
-    }
-    .form-row > .form-group {
-        flex: 1;
-    }
-    .form-group {
-        margin-bottom: 1.5rem;
-    }
-    .form-group:last-child {
-        margin-bottom: 0;
-    }
-    .form-group label {
-        display: block;
-        font-size: 0.95rem;
-        font-weight: 600;
-        color: #333;
-        margin-bottom: 0.6rem;
-    }
-    .form-group input[type="text"],
-    .form-group input[type="email"],
-    .form-group input[type="url"],
-    .form-group select,
-    .form-group textarea {
-        width: 100%;
-        padding: 0.75rem 1rem;
-        border: 1px solid #d1d5db;
-        border-radius: 8px;
-        font-size: 1rem;
-        color: #1f2937;
-        background: #fff;
-        box-sizing: border-box;
-        transition: border-color 0.2s, box-shadow 0.2s;
-    }
-    .form-group input:focus,
-    .form-group select:focus,
-    .form-group textarea:focus {
-        outline: none;
-        border-color: #10b981;
-        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
-    }
-    .form-group textarea {
-        resize: vertical;
-    }
+/* ── Horaires ─────────────────────────────────────────────── */
+.horaires-admin-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 0.55rem;
+}
+.horaire-admin-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: var(--cream);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.6rem 0.9rem;
+}
+.horaire-toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    flex-shrink: 0;
+    width: 70px;
+}
+.horaire-toggle-label input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--green);
+    cursor: pointer;
+}
+.horaire-jour-name {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--dark);
+    letter-spacing: 0.03em;
+}
+.horaire-times-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex: 1;
+}
+.horaire-times-wrap.horaire-disabled {
+    display: none;
+}
+.horaire-time-input {
+    border: 1px solid var(--border) !important;
+    border-radius: 7px !important;
+    padding: 0.4rem 0.5rem !important;
+    font-size: 0.85rem !important;
+    background: #fff !important;
+    width: auto;
+    flex: 1;
+    min-width: 0;
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+    transition: border-color 0.2s;
+}
+.horaire-time-input:focus { border-color: var(--green) !important; }
+.horaire-time-input:disabled { background: var(--cream) !important; color: var(--muted) !important; }
+.horaire-sep { font-size: 0.85rem; color: var(--muted); flex-shrink: 0; }
+.horaire-closed-label {
+    font-size: 0.78rem;
+    color: var(--muted);
+    font-style: italic;
+    flex: 1;
+}
+.horaire-closed-label.hidden { display: none; }
 
-    .checkbox-label {
-        display: flex;
-        align-items: center;
-        cursor: pointer;
-        font-weight: 500;
-        color: #333;
-    }
-    .checkbox-label input[type="checkbox"] {
-        margin-right: 0.6rem;
-        width: 18px;
-        height: 18px;
-        accent-color: #10b981;
-    }
-    .field-help {
-        font-size: 0.85rem;
-        color: #6b7280;
-        margin-top: 0.4rem;
-        display: block;
-    }
+/* ── Galerie existante hover ──────────────────────────────── */
+.galerie-existante .galerie-thumb input[type="checkbox"]:checked + * {
+    background: rgba(220,38,38,0.4) !important;
+}
 
-    /* Phone input group */
-    .phone-input-group {
-        display: flex;
-        border: 1px solid #d1d5db;
-        border-radius: 8px;
-        overflow: hidden;
-        background: #fff;
-    }
-    .phone-input-group .phone-prefix {
-        padding: 0.75rem 0.8rem;
-        background: #e5e7eb;
-        color: #4b5563;
-        font-size: 1rem;
-        border-right: 1px solid #d1d5db;
-        display: flex;
-        align-items: center;
-    }
-    .phone-input-group input {
-        border: none;
-        flex-grow: 1;
-        padding: 0.75rem 1rem;
-    }
-    .phone-input-group input:focus {
-        box-shadow: none;
-    }
-
-    /* Photos */
-    .current-photo {
-        margin-bottom: 1rem;
-        border: 1px solid #e5e7eb;
-        border-radius: 8px;
-        padding: 1rem;
-        background: #f9fafb;
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.75rem;
-    }
-    .current-photo img {
-        max-width: 200px;
-        height: auto;
-        border-radius: 6px;
-        border: 1px solid #d1d5db;
-    }
-    .gallery-photos-preview {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 1rem;
-        margin-bottom: 1rem;
-    }
-    .gallery-photo-item {
-        position: relative;
-        border: 1px solid #e5e7eb;
-        border-radius: 8px;
-        padding: 0.5rem;
-        background: #f9fafb;
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.5rem;
-    }
-    .gallery-photo-item img {
-        width: 100px;
-        height: 100px;
-        object-fit: cover;
-        border-radius: 4px;
-        border: 1px solid #d1d5db;
-    }
-
-    /* Services */
-    #services-list {
-        margin-bottom: 1rem;
-    }
-    .form-group--service {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        margin-bottom: 0.75rem;
-    }
-    .form-group--service input {
-        flex-grow: 1;
-    }
-    .btn-remove-service {
-        background: #ef4444;
-        color: #fff;
-        border: none;
-        border-radius: 6px;
-        width: 32px;
-        height: 32px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.2rem;
-        cursor: pointer;
-        transition: background 0.2s;
-    }
-    .btn-remove-service:hover { background: #dc2626; }
-    .btn-add-service {
-        background: #22c55e;
-        color: #fff;
-        padding: 0.6rem 1.2rem;
-        border: none;
-        border-radius: 8px;
-        font-size: 0.9rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: background 0.2s;
-    }
-    .btn-add-service:hover { background: #16a34a; }
-
-    /* Horaires */
-    .horaires-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 1rem;
-    }
-    .horaire-item {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        background: #fff;
-        border: 1px solid #e5e7eb;
-        border-radius: 8px;
-        padding: 0.75rem 1rem;
-    }
-    .horaire-item label {
-        margin-bottom: 0;
-        flex-shrink: 0;
-        min-width: 80px;
-    }
-    .horaire-item input[type="time"] {
-        padding: 0.5rem 0.75rem;
-        font-size: 0.9rem;
-        border-radius: 6px;
-        border: 1px solid #d1d5db;
-        flex-grow: 1;
-    }
-    .horaire-item input[type="time"]:disabled {
-        background: #f3f4f6;
-        color: #9ca3af;
-    }
-    .horaire-item span {
-        color: #6b7280;
-    }
-
-    /* Form Actions */
-    .form-actions {
-        margin-top: 2rem;
-        padding-top: 1.5rem;
-        border-top: 1px solid #eee;
-        text-align: right;
-    }
-    .btn-submit {
-        background: #10b981;
-        color: #fff;
-        padding: 0.8rem 2rem;
-        border: none;
-        border-radius: 8px;
-        font-size: 1.1rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: background 0.2s;
-    }
-    .btn-submit:hover { background: #059669; }
-
-    @media (max-width: 768px) {
-        .form-row {
-            flex-direction: column;
-            gap: 0;
-        }
-        .form-section h2 {
-            font-size: 1.1rem;
-        }
-        .form-header h1 {
-            font-size: 1.5rem;
-        }
-    }
+@media (max-width: 640px) {
+    .horaires-admin-grid { grid-template-columns: 1fr; }
+    .admin-form-badge { flex-wrap: wrap; }
+}
 </style>
+@endpush
 
-{{-- ── SCRIPTS ─────────────────────────────────────────────────── --}}
+@push('scripts')
 <script>
-    // Gérer l'ajout/suppression de services
-    document.getElementById('add-service').addEventListener('click', function() {
-        const servicesList = document.getElementById('services-list');
-        const newServiceGroup = document.createElement('div');
-        newServiceGroup.classList.add('form-group', 'form-group--service');
-        newServiceGroup.innerHTML = `
-            <input type="text" name="services[]" maxlength="60" placeholder="Nom du service" />
-            <button type="button" class="btn-remove-service">×</button>
-        `;
-        servicesList.appendChild(newServiceGroup);
-        newServiceGroup.querySelector('.btn-remove-service').addEventListener('click', function() {
-            newServiceGroup.remove();
+// ── Téléphone béninois ────────────────────────────────────────────────
+(function () {
+    function onlyDigits(v) { return (v || '').replace(/\D+/g, ''); }
+    function toLocalDigits(v) {
+        let d = onlyDigits(v);
+        if (d.startsWith('229')) d = d.slice(3);
+        if (!d.length) return '01';
+        if (d.startsWith('01')) return d.slice(0, 10);
+        return ('01' + d.slice(0, 8)).slice(0, 10);
+    }
+    function formatPhone(v) {
+        const d = toLocalDigits(v);
+        return d.match(/.{1,2}/g)?.join(' ') ?? '01';
+    }
+
+    document.querySelectorAll('[data-benin-phone]').forEach(input => {
+        input.value = formatPhone(input.value || '01');
+        input.addEventListener('input', () => { input.value = formatPhone(input.value); });
+        input.addEventListener('paste', e => {
+            e.preventDefault();
+            input.value = formatPhone((e.clipboardData || window.clipboardData).getData('text'));
         });
     });
 
-    document.querySelectorAll('.btn-remove-service').forEach(button => {
-        button.addEventListener('click', function() {
-            button.closest('.form-group--service').remove();
+    document.getElementById('etablissementForm').addEventListener('submit', () => {
+        document.querySelectorAll('[data-benin-phone]').forEach(input => {
+            const digits = toLocalDigits(input.value);
+            input.value = (input.dataset.required !== 'true' && digits === '01') ? '' : formatPhone(digits);
         });
     });
+})();
 
-    // Gérer l'activation/désactivation des champs d'horaires
-    document.querySelectorAll('input[type="checkbox"][data-jour]').forEach(checkbox => {
-        checkbox.addEventListener('change', function() {
-            const jour = this.dataset.jour;
-            const debutInput = document.querySelector(`input[name="horaires[${jour}][debut]"]`);
-            const finInput = document.querySelector(`input[name="horaires[${jour}][fin]"]`);
-            if (this.checked) {
-                debutInput.removeAttribute('disabled');
-                finInput.removeAttribute('disabled');
-            } else {
-                debutInput.setAttribute('disabled', 'disabled');
-                finInput.setAttribute('disabled', 'disabled');
-            }
-        });
+// ── Horaires ──────────────────────────────────────────────────────────
+function toggleHoraire(checkbox) {
+    const row    = checkbox.closest('.horaire-admin-row');
+    const times  = row.querySelector('.horaire-times-wrap');
+    const closed = row.querySelector('.horaire-closed-label');
+    const inputs = times.querySelectorAll('input');
+
+    if (checkbox.checked) {
+        times.classList.remove('horaire-disabled');
+        closed.classList.add('hidden');
+        inputs.forEach(i => i.disabled = false);
+    } else {
+        times.classList.add('horaire-disabled');
+        closed.classList.remove('hidden');
+        inputs.forEach(i => i.disabled = true);
+    }
+}
+
+// ── Services ──────────────────────────────────────────────────────────
+function addService() {
+    const container = document.getElementById('servicesInputs');
+    const count = container.querySelectorAll('input').length;
+    if (count >= 8) { alert('Maximum 8 services autorisés.'); return; }
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.name = 'services[]';
+    input.placeholder = 'Service ' + (count + 1);
+    input.maxLength = 60;
+    container.appendChild(input);
+    input.focus();
+}
+
+// ── Aperçu photo principale ───────────────────────────────────────────
+function previewMainPhoto(input) {
+    if (!input.files || !input.files[0]) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+        document.getElementById('mainPhotoImg').src = e.target.result;
+        document.getElementById('mainPhotoPreview').style.display = 'flex';
+        document.querySelector('#mainPhotoZone .upload-label').style.display = 'none';
+    };
+    reader.readAsDataURL(input.files[0]);
+}
+function removeMainPhoto() {
+    document.getElementById('photo_principale').value = '';
+    document.getElementById('mainPhotoPreview').style.display = 'none';
+    document.querySelector('#mainPhotoZone .upload-label').style.display = 'flex';
+}
+
+// ── Aperçu galerie ────────────────────────────────────────────────────
+function previewGalerie(input) {
+    const container = document.getElementById('galeriePreview');
+    container.innerHTML = '';
+    if (!input.files || !input.files.length) return;
+    Array.from(input.files).slice(0, 6).forEach((file, i) => {
+        const reader = new FileReader();
+        reader.onload = e => {
+            const div = document.createElement('div');
+            div.className = 'galerie-thumb-preview';
+            div.innerHTML = `<img src="${e.target.result}" alt="Photo ${i+1}"><span class="galerie-thumb-num">${i+1}</span>`;
+            container.appendChild(div);
+        };
+        reader.readAsDataURL(file);
     });
-
-    // Gérer le formatage des numéros de téléphone béninois
-    document.querySelectorAll('input[data-benin-phone]').forEach(input => {
-        input.addEventListener('input', function(e) {
-            let value = e.target.value.replace(/\D/g, ''); // Supprimer tout ce qui n'est pas un chiffre
-            if (value.startsWith('229')) {
-                value = value.substring(3); // Supprimer le préfixe pays si présent
-            }
-            if (value.startsWith('01')) {
-                value = value.substring(2); // Supprimer le préfixe local si présent
-            }
-
-            let formattedValue = '';
-            for (let i = 0; i < value.length; i++) {
-                if (i > 0 && i % 2 === 0) {
-                    formattedValue += ' ';
-                }
-                formattedValue += value[i];
-            }
-            e.target.value = formattedValue.trim();
-        });
-
-        // Initialiser le format si une valeur existe
-        if (input.value) {
-            let value = input.value.replace(/\D/g, '');
-            if (value.startsWith('229')) {
-                value = value.substring(3);
-            }
-            if (value.startsWith('01')) {
-                value = value.substring(2);
-            }
-            let formattedValue = '';
-            for (let i = 0; i < value.length; i++) {
-                if (i > 0 && i % 2 === 0) {
-                    formattedValue += ' ';
-                }
-                formattedValue += value[i];
-            }
-            input.value = formattedValue.trim();
-        }
-    });
+    if (input.files.length > 6) {
+        const p = document.createElement('p');
+        p.className = 'form-hint';
+        p.style.marginTop = '0.5rem';
+        p.textContent = '⚠️ Seules les 6 premières photos seront enregistrées.';
+        container.appendChild(p);
+    }
+}
 </script>
+@endpush
 
-@endsection@extends('layouts.app')
-
-@section('title', isset($etablissement)
-    ? 'Modifier « ' . $etablissement->nom . ' » — Administration'
-    : 'Ajouter un établissement — Administration')
-
-@section('content')
-<div class="form-page">
-    <div class="form-inner">
-
-        {{-- ── EN-TÊTE ──────────────────────────────────────────────────── --}}
-        <div class="form-header">
-            <a href="{{ route('admin.etablissements') }}" class="btn-back">← Retour</a>
-            <div>
-                <span class="admin-badge">⚙️ Administration</span>
-                <h1>{{ isset($etablissement) ? '✏️ Modifier un établissement' : '➕ Ajouter un établissement' }}</h1>
-            </div>
-        </div>
-
-        {{-- ── ERREURS ──────────────────────────────────────────────────── --}}
-        @if($errors->any())
-            <div class="alert alert-error">
-                @foreach($errors->all() as $error)
-                    <div>• {{ $error }}</div>
-                @endforeach
-            </div>
-        @endif
-
-        {{-- ── FORMULAIRE ──────────────────────────────────────────────── --}}
-        <form
-            method="POST"
-            action="{{ isset($etablissement)
-                ? route('admin.update-etablissement', $etablissement)
-                : route('admin.store-etablissement') }}"
-            enctype="multipart/form-data"
-            class="etab-form"
-            id="etablissementForm"
-        >
-            @csrf
-            @isset($etablissement)
-                @method('PUT')
-            @endisset
-
-            {{-- ══════════════════════════════════════════════════════════
-                 BLOC ADMIN — statut, propriétaire, vedette
-            ══════════════════════════════════════════════════════════ --}}
-            <div class="form-section form-section--admin">
-                <h2>⚙️ Paramètres administrateur</h2>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="statut">Statut de publication *</label>
-                        <select id="statut" name="statut" required>
-                            <option value="actif"
-                                {{ old('statut', $etablissement->statut ?? 'en_attente') === 'actif' ? 'selected' : '' }}>
-                                ✅ Actif — visible immédiatement
-                            </option>
-                            <option value="en_attente"
-                                {{ old('statut', $etablissement->statut ?? 'en_attente') === 'en_attente' ? 'selected' : '' }}>
-                                ⏳ En attente de validation
-                            </option>
-                            <option value="suspendu"
-                                {{ old('statut', $etablissement->statut ?? '') === 'suspendu' ? 'selected' : '' }}>
-                                🚫 Suspendu
-                            </option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="user_id">
-                            Propriétaire
-                            <small style="font-weight:400; color:#888">(requis si l'établissement doit avoir un propriétaire)</small>
-                        </label>
-                        <select id="user_id" name="user_id" required>
-                            <option value="">— Sélectionner un propriétaire —</option>
-                            @foreach($proprietaires as $proprio)
-                                <option value="{{ $proprio->id }}"
-                                    {{ old('user_id', $etablissement->user_id ?? '') == $proprio->id ? 'selected' : '' }}>
-                                    {{ $proprio->nom }} — {{ $proprio->email }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="checkbox-label">
-                        <input
-                            type="checkbox"
-                            name="en_vedette"
-                            value="1"
-                            {{ old('en_vedette', $etablissement->en_vedette ?? false) ? 'checked' : '' }}
-                        />
-                        <span>⭐ Mettre en vedette</span>
-                    </label>
-                    <small class="field-help" style="margin-left:1.6rem">
-                        Apparaît dans les sections "Coups de cœur" et "À la une".
-                    </small>
-                </div>
-            </div>
-
-            {{-- ══════════════════════════════════════════════════════════
-                 INFORMATIONS PRINCIPALES
-            ══════════════════════════════════════════════════════════ --}}
-            <div class="form-section">
-                <h2>📋 Informations principales</h2>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="ville_id">Ville *</label>
-                        <select id="ville_id" name="ville_id" required>
-                            <option value="">Choisir une ville</option>
-                            @foreach($villes as $ville)
-                                <option value="{{ $ville->id }}"
-                                    {{ old('ville_id', $etablissement->ville_id ?? '') == $ville->id ? 'selected' : '' }}>
-                                    {{ $ville->emoji }} {{ $ville->nom }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="categorie_id">Catégorie *</label>
-                        <select id="categorie_id" name="categorie_id" required>
-                            <option value="">Choisir une catégorie</option>
-                            @foreach($categories as $cat)
-                                <option value="{{ $cat->id }}"
-                                    {{ old('categorie_id', $etablissement->categorie_id ?? '') == $cat->id ? 'selected' : '' }}>
-                                    {{ $cat->emoji }} {{ $cat->nom }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="nom">Nom de l'établissement *</label>
-                    <input
-                        type="text"
-                        id="nom"
-                        name="nom"
-                        value="{{ old('nom', $etablissement->nom ?? '') }}"
-                        placeholder="ex : Restaurant Le Palmier"
-                        maxlength="150"
-                        required
-                    />
-                </div>
-
-                <div class="form-group">
-                    <label for="description">
-                        Description * <small>(minimum 30 caractères)</small>
-                    </label>
-                    <textarea
-                        id="description"
-                        name="description"
-                        rows="5"
-                        maxlength="2000"
-                        placeholder="Décrivez l'établissement, sa spécialité, son ambiance..."
-                        required
-                    >{{ old('description', $etablissement->description ?? '') }}</textarea>
-                    <small class="field-help">Soyez clair et précis : spécialité, ambiance, clientèle, points forts…</small>
-                </div>
-
-                <div class="form-group">
-                    <label for="adresse">Adresse complète *</label>
-                    <input
-                        type="text"
-                        id="adresse"
-                        name="adresse"
-                        value="{{ old('adresse', $etablissement->adresse ?? '') }}"
-                        placeholder="ex : Quartier Cadjehoun, près du Carrefour..."
-                        maxlength="255"
-                        required
-                    />
-                </div>
-
-                <div class="form-group">
-                    <label for="fourchette_prix">Fourchette de prix</label>
-                    <input
-                        type="text"
-                        id="fourchette_prix"
-                        name="fourchette_prix"
-                        value="{{ old('fourchette_prix', $etablissement->fourchette_prix ?? '') }}"
+@endsection                 value="{{ old('fourchette_prix', $etablissement->fourchette_prix ?? '') }}"
                         placeholder="ex : 1 500 – 5 000 FCFA"
                         maxlength="100"
                     />
