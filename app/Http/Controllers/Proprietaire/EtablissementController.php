@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Proprietaire;
 use App\Http\Controllers\Controller;
 use App\Models\Categorie;
 use App\Models\Etablissement;
+use App\Models\Menu;
 use App\Models\Photo;
 use App\Models\Service;
 use App\Models\Ville;
@@ -20,7 +21,6 @@ class EtablissementController extends Controller
 
     private const PHOTO_MIMES  = 'jpg,jpeg,png,webp';
     private const MENU_MIMES   = 'jpg,jpeg,png,webp,pdf';
-    private const GALERIE_MAX  = 6;
 
     private const JOURS = [
         'Lundi', 'Mardi', 'Mercredi', 'Jeudi',
@@ -56,19 +56,18 @@ class EtablissementController extends Controller
                 ->store('etablissements', 'public');
         }
 
-        if ($request->hasFile('menu')) {
-            $validated['menu'] = $request->file('menu')
-                ->store('etablissements/menus', 'public');
-        }
-
         $validated['horaires'] = $this->buildHoraires($request);
         $validated['user_id']  = auth()->id();
         $validated['statut']   = 'en_attente';
+
+        // On retire les champs non-colonnes avant create()
+        unset($validated['menus']);
 
         $etablissement = Etablissement::create($validated);
 
         $this->storeServices($request, $etablissement);
         $this->storePhotos($request, $etablissement);
+        $this->storeMenus($request, $etablissement);
 
         return redirect()
             ->route('proprietaire.dashboard')
@@ -83,7 +82,7 @@ class EtablissementController extends Controller
         $categories = Categorie::where('active', true)->orderBy('nom')->get();
         $jours      = self::JOURS;
 
-        $etablissement->load(['services', 'photos']);
+        $etablissement->load(['services', 'photos', 'menus']);
 
         return view('proprietaire.edit', compact('etablissement', 'villes', 'categories', 'jours'));
     }
@@ -103,27 +102,32 @@ class EtablissementController extends Controller
                 ->store('etablissements', 'public');
         }
 
-        // Menu
-        if ($request->boolean('supprimer_menu') && $etablissement->menu) {
-            Storage::disk('public')->delete($etablissement->menu);
-            $validated['menu'] = null;
+        // Suppression photos galerie sélectionnées
+        if ($request->filled('supprimer_photos')) {
+            Photo::whereIn('id', $request->input('supprimer_photos'))
+                ->where('etablissement_id', $etablissement->id)
+                ->get()
+                ->each(fn ($p) => tap($p, fn () => Storage::disk('public')->delete($p->url))->delete());
         }
 
-        if ($request->hasFile('menu')) {
-            if ($etablissement->menu) {
-                Storage::disk('public')->delete($etablissement->menu);
-            }
-            $validated['menu'] = $request->file('menu')
-                ->store('etablissements/menus', 'public');
+        // Suppression menus sélectionnés
+        if ($request->filled('supprimer_menus')) {
+            Menu::whereIn('id', $request->input('supprimer_menus'))
+                ->where('etablissement_id', $etablissement->id)
+                ->get()
+                ->each(fn ($m) => tap($m, fn () => Storage::disk('public')->delete($m->url))->delete());
         }
 
         $validated['horaires'] = $this->buildHoraires($request);
+
+        unset($validated['menus']);
 
         $etablissement->update($validated);
 
         $etablissement->services()->delete();
         $this->storeServices($request, $etablissement);
         $this->storePhotos($request, $etablissement);
+        $this->storeMenus($request, $etablissement);
 
         return redirect()
             ->route('proprietaire.dashboard')
@@ -134,16 +138,16 @@ class EtablissementController extends Controller
     {
         abort_if($etablissement->user_id !== auth()->id(), 403);
 
-        $etablissement->loadMissing('photos');
+        $etablissement->loadMissing(['photos', 'menus']);
 
         if ($etablissement->photo_principale) {
             Storage::disk('public')->delete($etablissement->photo_principale);
         }
-        if ($etablissement->menu) {
-            Storage::disk('public')->delete($etablissement->menu);
-        }
         foreach ($etablissement->photos as $photo) {
             Storage::disk('public')->delete($photo->url);
+        }
+        foreach ($etablissement->menus as $menu) {
+            Storage::disk('public')->delete($menu->url);
         }
 
         $nom = $etablissement->nom;
@@ -165,13 +169,26 @@ class EtablissementController extends Controller
         return back()->with('success', 'Photo supprimée.');
     }
 
-    // ── Validation ───────────────────────────────────────────────────────
+    public function deleteMenu(Menu $menu)
+    {
+        $menu->loadMissing('etablissement');
+        abort_if($menu->etablissement->user_id !== auth()->id(), 403);
+
+        Storage::disk('public')->delete($menu->url);
+        $menu->delete();
+
+        return back()->with('success', 'Fichier menu supprimé.');
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    //  HELPERS — validation & stockage
+    // ════════════════════════════════════════════════════════════════════════
 
     private function validerFormulaire(Request $request): array
     {
         $validated = $request->validate([
             'nom'             => ['required', 'string', 'min:2', 'max:150'],
-            'description'     => ['required', 'string','max:2000'],
+            'description'     => ['required', 'string', 'max:2000'],
             'ville_id'        => ['required', 'exists:villes,id'],
             'categorie_id'    => ['required', 'exists:categories,id'],
             'adresse'         => ['required', 'string', 'min:5', 'max:255'],
@@ -183,15 +200,16 @@ class EtablissementController extends Controller
             'email'    => ['nullable', 'email', 'max:150'],
             'site_web' => ['nullable', 'url', 'max:255'],
 
-            // Photo principale — aucune contrainte de taille ni de dimensions
+            // Photo principale — sans limite de taille
             'photo_principale' => ['nullable', 'image', 'mimes:' . self::PHOTO_MIMES],
 
-            // Galerie — aucune contrainte de taille ni de dimensions
-            'photos'   => ['nullable', 'array', 'max:' . self::GALERIE_MAX],
+            // Galerie — sans limite de nombre ni de taille
+            'photos'   => ['nullable', 'array'],
             'photos.*' => ['image', 'mimes:' . self::PHOTO_MIMES],
 
-            // Menu — image ou PDF, aucune contrainte de taille
-            'menu' => ['nullable', 'file', 'mimes:' . self::MENU_MIMES],
+            // Menus — plusieurs fichiers image ou PDF
+            'menus'   => ['nullable', 'array'],
+            'menus.*' => ['file', 'mimes:' . self::MENU_MIMES],
 
             'services'   => ['nullable', 'array', 'max:8'],
             'services.*' => ['nullable', 'string', 'max:60'],
@@ -201,14 +219,14 @@ class EtablissementController extends Controller
             'horaires.*.debut'  => ['nullable', 'string', 'regex:/^([01]\d|2[0-3]):[0-5]\d$/'],
             'horaires.*.fin'    => ['nullable', 'string', 'regex:/^([01]\d|2[0-3]):[0-5]\d$/'],
         ], [
-            'nom.min'            => 'Le nom doit comporter au moins 2 caractères.',
-            'description.max'    => 'La description ne peut pas dépasser 2 000 caractères.',
-            'email.email'        => "L'adresse email n'est pas valide.",
-            'site_web.url'       => 'Le site web doit être une URL valide.',
+            'nom.min'                => 'Le nom doit comporter au moins 2 caractères.',
+            'description.max'        => 'La description ne peut pas dépasser 2 000 caractères.',
+            'email.email'            => "L'adresse email n'est pas valide.",
+            'site_web.url'           => 'Le site web doit être une URL valide.',
             'photo_principale.mimes' => 'Format accepté : JPG, PNG ou WebP.',
-            'photos.*.mimes'     => 'Formats acceptés : JPG, PNG ou WebP.',
-            'menu.mimes'         => 'Le menu doit être une image (JPG, PNG, WebP) ou un PDF.',
-            'services.max'       => 'Maximum 8 services.',
+            'photos.*.mimes'         => 'Formats acceptés : JPG, PNG ou WebP.',
+            'menus.*.mimes'          => 'Menu : formats acceptés JPG, PNG, WebP ou PDF.',
+            'services.max'           => 'Maximum 8 services.',
         ]);
 
         $this->validateHorairesConsistency($request);
@@ -287,17 +305,29 @@ class EtablissementController extends Controller
     {
         if (!$request->hasFile('photos')) return;
 
-        $existingCount  = $etablissement->photos()->count();
-        $remainingSlots = max(0, self::GALERIE_MAX - $existingCount);
-        if ($remainingSlots === 0) return;
+        $ordre = $etablissement->photos()->max('ordre') ?? 0;
 
-        $ordre  = $etablissement->photos()->max('ordre') ?? 0;
-        $photos = array_slice($request->file('photos', []), 0, $remainingSlots);
-
-        foreach ($photos as $file) {
+        foreach ($request->file('photos', []) as $file) {
             Photo::create([
                 'etablissement_id' => $etablissement->id,
                 'url'              => $file->store('etablissements/galerie', 'public'),
+                'ordre'            => ++$ordre,
+            ]);
+        }
+    }
+
+    private function storeMenus(Request $request, Etablissement $etablissement): void
+    {
+        if (!$request->hasFile('menus')) return;
+
+        $ordre = $etablissement->menus()->max('ordre') ?? 0;
+
+        foreach ($request->file('menus', []) as $file) {
+            $isPdf = $file->getMimeType() === 'application/pdf';
+            Menu::create([
+                'etablissement_id' => $etablissement->id,
+                'url'              => $file->store('etablissements/menus', 'public'),
+                'type'             => $isPdf ? 'pdf' : 'image',
                 'ordre'            => ++$ordre,
             ]);
         }

@@ -3,7 +3,7 @@
 @section('title', $etablissement->nom . ' — Bonnes Adresses Bénin')
 @section('description', Str::limit($etablissement->description, 150))
 
-{{-- ══ OPEN GRAPH — Fiche établissement ════════════════════ --}}
+{{-- ══ OPEN GRAPH ══════════════════════════════════════════════════ --}}
 @section('og_type', 'business.business')
 @section('og_title', $etablissement->nom . ' · ' . $etablissement->categorie->nom . ' à ' . $etablissement->ville->nom)
 @section('og_description',
@@ -21,13 +21,13 @@
 
 @push('styles')
 <style>
-/* ══ LIGHTBOX ════════════════════════════════════════════ */
+/* ══ LIGHTBOX ════════════════════════════════════════════════════ */
 .lightbox-overlay {
     display: none;
     position: fixed;
     inset: 0;
     z-index: 9999;
-    background: rgba(0, 0, 0, 0.92);
+    background: rgba(0,0,0,0.92);
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
     align-items: center;
@@ -35,9 +35,7 @@
     padding: 1rem;
     touch-action: none;
 }
-.lightbox-overlay.open {
-    display: flex;
-}
+.lightbox-overlay.open { display: flex; }
 .lightbox-inner {
     position: relative;
     max-width: 92vw;
@@ -120,7 +118,7 @@
     text-overflow: ellipsis;
 }
 
-/* ══ GALERIE CLIQUABLE ══════════════════════════════════ */
+/* ══ GALERIE ═════════════════════════════════════════════════════ */
 .galerie-item {
     cursor: pointer;
     position: relative;
@@ -134,10 +132,7 @@
     transition: transform 0.3s ease, filter 0.3s ease;
     display: block;
 }
-.galerie-item:hover img {
-    transform: scale(1.05);
-    filter: brightness(0.85);
-}
+.galerie-item:hover img { transform: scale(1.05); filter: brightness(0.85); }
 .galerie-item::after {
     content: '🔍';
     position: absolute;
@@ -150,67 +145,103 @@
     transition: opacity 0.2s;
     background: rgba(0,0,0,0.2);
 }
-.galerie-item:hover::after {
-    opacity: 1;
+.galerie-item:hover::after { opacity: 1; }
+.fiche-hero--clickable { cursor: zoom-in; }
+
+/* ══ MENU ════════════════════════════════════════════════════════ */
+.menu-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 1rem;
+    margin-top: 0.75rem;
+}
+.menu-item {
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1.5px solid #e5e7eb;
+    cursor: pointer;
+    position: relative;
+    transition: box-shadow 0.2s;
+}
+.menu-item:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
+.menu-item img {
+    width: 100%;
+    height: 160px;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.3s;
+}
+.menu-item:hover img { transform: scale(1.04); }
+.menu-item--pdf {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 120px;
+    padding: 1.2rem;
+    background: #fef3c7;
+    border-color: #fcd34d;
+    cursor: default;
+    text-decoration: none;
+}
+.menu-item--pdf:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
+.menu-pdf-icon { font-size: 2.5rem; line-height: 1; }
+.menu-pdf-label {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #92400e;
+    text-align: center;
 }
 
-/* ══ HERO PHOTO PRINCIPALE CLIQUABLE ════════════════════ */
-.fiche-hero--clickable {
-    cursor: zoom-in;
+/* ══ HORAIRES dans la sidebar ════════════════════════════════════ */
+.horaires-card {
+    margin-top: 1.2rem;
+    border-top: 1px solid #e5e7eb;
+    padding-top: 1rem;
 }
+.horaires-card h4 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin-bottom: 0.6rem;
+    color: var(--dark, #1a1a1a);
+}
+.horaire-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    padding: 0.25rem 0;
+    border-bottom: 1px solid #f3f4f6;
+}
+.horaire-row:last-child { border-bottom: none; }
+.horaire-row span:first-child { font-weight: 600; color: #374151; }
+.horaire-row span:last-child  { color: #6b7280; }
+.horaire-ferme { color: #ef4444 !important; font-style: italic; }
 
-/* ══ RESPONSIVE AMÉLIORÉ ════════════════════════════════ */
+/* ══ RESPONSIVE ══════════════════════════════════════════════════ */
 @media (max-width: 900px) {
-    .fiche-inner {
-        grid-template-columns: 1fr !important;
-    }
-    .fiche-sidebar {
-        order: -1;
-    }
+    .fiche-inner { grid-template-columns: 1fr !important; }
+    .fiche-sidebar { order: -1; }
 }
 @media (max-width: 600px) {
-    .fiche-hero {
-        height: 260px;
-    }
-    .fiche-hero-content {
-        bottom: 1.2rem;
-        left: 1rem;
-        right: 1rem;
-    }
-    .fiche-title {
-        font-size: 1.5rem !important;
-    }
-    .fiche-body {
-        padding: 1.5rem 1rem;
-    }
-    .galerie-grid {
-        grid-template-columns: repeat(2, 1fr) !important;
-        gap: 0.5rem;
-    }
-    .galerie-item img {
-        height: 120px;
-    }
+    .fiche-hero { height: 260px; }
+    .fiche-hero-content { bottom: 1.2rem; left: 1rem; right: 1rem; }
+    .fiche-title { font-size: 1.5rem !important; }
+    .fiche-body { padding: 1.5rem 1rem; }
+    .galerie-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 0.5rem; }
+    .galerie-item img { height: 120px; }
     .lightbox-btn--prev { left: 0.4rem; }
     .lightbox-btn--next { right: 0.4rem; }
-    .contact-card {
-        position: static !important;
-    }
-}
-@media (max-width: 380px) {
-    .fiche-badges {
-        flex-wrap: wrap;
-        gap: 0.4rem;
-    }
-    .galerie-grid {
-        grid-template-columns: 1fr 1fr !important;
-    }
+    .contact-card { position: static !important; }
+    .menu-grid { grid-template-columns: repeat(2, 1fr); }
 }
 </style>
 @endpush
 
 @section('content')
 
-{{-- ══ LIGHTBOX ════════════════════════════════════════════ --}}
+{{-- ══ LIGHTBOX ════════════════════════════════════════════════════ --}}
 <div class="lightbox-overlay" id="lightbox" role="dialog" aria-modal="true" aria-label="Visionneuse de photos">
     <button class="lightbox-close" id="lightboxClose" aria-label="Fermer">✕</button>
     <button class="lightbox-btn lightbox-btn--prev" id="lightboxPrev" aria-label="Photo précédente">‹</button>
@@ -224,7 +255,7 @@
 
 <div class="fiche-page">
 
-    {{-- ══ EN-TÊTE FICHE ══════════════════════════════════ --}}
+    {{-- ══ EN-TÊTE ══════════════════════════════════════════════════ --}}
     <div class="fiche-hero{{ $etablissement->photo_principale ? ' fiche-hero--clickable' : '' }}"
          style="@if($etablissement->photo_principale) background-image: url('{{ $etablissement->photo_url }}') @endif"
          @if($etablissement->photo_principale)
@@ -256,11 +287,11 @@
         </div>
     </div>
 
-    {{-- ══ CORPS DE LA FICHE ════════════════════════════ --}}
+    {{-- ══ CORPS ════════════════════════════════════════════════════ --}}
     <div class="fiche-body">
         <div class="fiche-inner">
 
-            {{-- Colonne principale --}}
+            {{-- ── Colonne principale ────────────────────────────── --}}
             <div class="fiche-main">
 
                 {{-- Description --}}
@@ -276,7 +307,7 @@
                     <div class="services-grid">
                         @foreach($etablissement->services as $service)
                             <div class="service-item">
-                                <span>{{ $service->emoji }}</span>
+                                <span>{{ $service->emoji ?? '' }}</span>
                                 {{ $service->libelle }}
                             </div>
                         @endforeach
@@ -306,6 +337,38 @@
                 </div>
                 @endif
 
+                {{-- Menu ─────────────────────────────────────────── --}}
+                @if($etablissement->menus->isNotEmpty())
+                <div class="fiche-section">
+                    <h2>🍽️ Menu</h2>
+                    <div class="menu-grid" id="menuGrid">
+                        @foreach($etablissement->menus as $menu)
+                            @if($menu->type === 'pdf')
+                                <a href="{{ asset('storage/' . $menu->url) }}"
+                                   target="_blank"
+                                   class="menu-item menu-item--pdf"
+                                   title="Ouvrir le menu PDF">
+                                    <span class="menu-pdf-icon">📄</span>
+                                    <span class="menu-pdf-label">Voir le menu<br>(PDF)</span>
+                                </a>
+                            @else
+                                <div class="menu-item"
+                                     data-url="{{ asset('storage/' . $menu->url) }}"
+                                     data-legend="Menu {{ $loop->iteration }}"
+                                     data-menu="1"
+                                     role="button"
+                                     tabindex="0"
+                                     aria-label="Voir la page menu {{ $loop->iteration }}">
+                                    <img src="{{ asset('storage/' . $menu->url) }}"
+                                         alt="Menu {{ $loop->iteration }}"
+                                         loading="lazy"/>
+                                </div>
+                            @endif
+                        @endforeach
+                    </div>
+                </div>
+                @endif
+
                 {{-- Localisation --}}
                 @if($etablissement->latitude && $etablissement->longitude)
                 <div class="fiche-section">
@@ -328,7 +391,7 @@
 
             </div>
 
-            {{-- Colonne contact (sidebar) --}}
+            {{-- ── Sidebar ───────────────────────────────────────── --}}
             <div class="fiche-sidebar">
                 <div class="contact-card">
                     <h3>Contacter</h3>
@@ -338,32 +401,30 @@
                             📱 Contacter sur WhatsApp
                         </a>
                     @endif
-
                     @if($etablissement->telephone)
                         <a href="tel:{{ $etablissement->telephone }}" class="btn-contact btn-tel">
                             📞 {{ $etablissement->telephone }}
                         </a>
                     @endif
-
                     @if($etablissement->email)
                         <a href="mailto:{{ $etablissement->email }}" class="btn-contact btn-email">
                             ✉️ {{ $etablissement->email }}
                         </a>
                     @endif
-
                     @if($etablissement->site_web)
                         <a href="{{ $etablissement->site_web }}" target="_blank" class="btn-contact btn-web">
                             🌐 Site web
                         </a>
                     @endif
 
+                    {{-- Horaires dans la sidebar --}}
                     @if($etablissement->horaires)
-                        <div class="horaires">
+                        <div class="horaires-card">
                             <h4>⏰ Horaires</h4>
                             @foreach($etablissement->horaires as $jour => $heure)
                                 <div class="horaire-row">
                                     <span>{{ $jour }}</span>
-                                    <span>{{ $heure }}</span>
+                                    <span class="{{ $heure === 'Fermé' ? 'horaire-ferme' : '' }}">{{ $heure }}</span>
                                 </div>
                             @endforeach
                         </div>
@@ -379,7 +440,7 @@
         </div>
     </div>
 
-    {{-- ══ SUGGESTIONS ════════════════════════════════════ --}}
+    {{-- ══ SUGGESTIONS ══════════════════════════════════════════════ --}}
     @if($suggestions->isNotEmpty())
     <section class="section suggestions-section">
         <div class="section-inner">
@@ -399,30 +460,33 @@
 @push('scripts')
 <script>
 (function () {
-    // ── Collecte toutes les images (photo principale + galerie) ──
+    // ── Collecte toutes les images (héro + galerie + menu images) ──
     const photos = [];
 
-    // Photo héro (principale)
     const hero = document.getElementById('heroImage');
     if (hero) {
         photos.push({ url: hero.dataset.url, legend: hero.dataset.legend });
     }
 
-    // Photos de galerie
     document.querySelectorAll('#galerieGrid .galerie-item').forEach(el => {
+        photos.push({ url: el.dataset.url, legend: el.dataset.legend });
+    });
+
+    // Images de menu également cliquables dans la lightbox
+    document.querySelectorAll('#menuGrid [data-menu]').forEach(el => {
         photos.push({ url: el.dataset.url, legend: el.dataset.legend });
     });
 
     if (photos.length === 0) return;
 
     // ── Éléments lightbox ──
-    const overlay   = document.getElementById('lightbox');
-    const img       = document.getElementById('lightboxImg');
-    const legend    = document.getElementById('lightboxLegend');
-    const counter   = document.getElementById('lightboxCounter');
-    const btnClose  = document.getElementById('lightboxClose');
-    const btnPrev   = document.getElementById('lightboxPrev');
-    const btnNext   = document.getElementById('lightboxNext');
+    const overlay  = document.getElementById('lightbox');
+    const img      = document.getElementById('lightboxImg');
+    const legend   = document.getElementById('lightboxLegend');
+    const counter  = document.getElementById('lightboxCounter');
+    const btnClose = document.getElementById('lightboxClose');
+    const btnPrev  = document.getElementById('lightboxPrev');
+    const btnNext  = document.getElementById('lightboxNext');
 
     let current = 0;
 
@@ -430,9 +494,8 @@
         current = (index + photos.length) % photos.length;
         img.src = photos[current].url;
         img.alt = photos[current].legend;
-        legend.textContent = photos[current].legend || '';
+        legend.textContent  = photos[current].legend || '';
         counter.textContent = photos.length > 1 ? `${current + 1} / ${photos.length}` : '';
-        // Affiche/cache les boutons nav si 1 seule photo
         btnPrev.style.display = photos.length > 1 ? 'flex' : 'none';
         btnNext.style.display = photos.length > 1 ? 'flex' : 'none';
     }
@@ -456,22 +519,24 @@
         hero.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') open(0); });
     }
 
+    let galerieOffset = hero ? 1 : 0;
     document.querySelectorAll('#galerieGrid .galerie-item').forEach((el, i) => {
-        // Si photo principale existe, les galeries commencent à l'index 1
-        const offset = hero ? 1 : 0;
-        el.addEventListener('click', () => open(i + offset));
-        el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') open(i + offset); });
+        el.addEventListener('click', () => open(i + galerieOffset));
+        el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') open(i + galerieOffset); });
+    });
+
+    let menuOffset = galerieOffset + document.querySelectorAll('#galerieGrid .galerie-item').length;
+    document.querySelectorAll('#menuGrid [data-menu]').forEach((el, i) => {
+        el.addEventListener('click', () => open(i + menuOffset));
+        el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') open(i + menuOffset); });
     });
 
     // ── Navigation ──
     btnClose.addEventListener('click', close);
-    btnPrev.addEventListener('click',  () => show(current - 1));
-    btnNext.addEventListener('click',  () => show(current + 1));
-
-    // Clic en dehors de l'image
+    btnPrev.addEventListener('click', () => show(current - 1));
+    btnNext.addEventListener('click', () => show(current + 1));
     overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
 
-    // Clavier
     document.addEventListener('keydown', e => {
         if (!overlay.classList.contains('open')) return;
         if (e.key === 'Escape')     close();
@@ -479,21 +544,17 @@
         if (e.key === 'ArrowRight') show(current + 1);
     });
 
-    // ── Swipe tactile (mobile) ──
+    // ── Swipe tactile ──
     let touchStartX = null;
-    overlay.addEventListener('touchstart', e => {
-        touchStartX = e.touches[0].clientX;
-    }, { passive: true });
+    overlay.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
     overlay.addEventListener('touchend', e => {
         if (touchStartX === null) return;
         const diff = touchStartX - e.changedTouches[0].clientX;
-        if (Math.abs(diff) > 50) {
-            diff > 0 ? show(current + 1) : show(current - 1);
-        }
+        if (Math.abs(diff) > 50) diff > 0 ? show(current + 1) : show(current - 1);
         touchStartX = null;
     }, { passive: true });
 
-    // ── PWA : enregistrement du Service Worker ──
+    // ── PWA ──
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('/sw.js')
