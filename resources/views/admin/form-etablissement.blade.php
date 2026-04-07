@@ -7,79 +7,105 @@
 @section('content')
 <style>
 .admin-form-badge {
-    display: flex; align-items: center; gap: 0.75rem;
-    background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px;
-    padding: 0.65rem 1.1rem; font-size: 0.82rem; font-weight: 600;
-    color: #92400e; margin-bottom: 1.8rem;
+    display:flex; align-items:center; gap:0.75rem;
+    background:#fffbeb; border:1px solid #fde68a; border-radius:10px;
+    padding:0.65rem 1.1rem; font-size:0.82rem; font-weight:600;
+    color:#92400e; margin-bottom:1.8rem;
 }
-.admin-section-highlight { border-color: #fde68a !important; background: #fffdf5 !important; }
-.admin-section-highlight h2 { color: #92400e !important; }
+.admin-section-highlight { border-color:#fde68a !important; background:#fffdf5 !important; }
+.admin-section-highlight h2 { color:#92400e !important; }
 
 .phone-input-group {
-    display: flex; align-items: stretch;
-    border: 1px solid var(--border); border-radius: 10px;
-    overflow: hidden; background: var(--cream); transition: border-color 0.2s;
+    display:flex; align-items:stretch;
+    border:1px solid var(--border); border-radius:10px;
+    overflow:hidden; background:var(--cream); transition:border-color 0.2s;
 }
-.phone-input-group:focus-within { border-color: var(--green); background: #fff; }
+.phone-input-group:focus-within { border-color:var(--green); background:#fff; }
 .phone-prefix {
-    padding: 0.65rem 0.9rem; background: var(--cream);
-    border-right: 1px solid var(--border); font-size: 0.88rem;
-    font-weight: 700; color: var(--muted);
-    display: flex; align-items: center; white-space: nowrap;
+    padding:0.65rem 0.9rem; background:var(--cream);
+    border-right:1px solid var(--border); font-size:0.88rem;
+    font-weight:700; color:var(--muted);
+    display:flex; align-items:center; white-space:nowrap;
 }
 .phone-input-group input {
-    border: none !important; border-radius: 0 !important;
-    background: transparent !important; flex: 1;
-    padding: 0.65rem 0.9rem; font-size: 0.93rem;
-    outline: none; box-shadow: none !important;
+    border:none !important; border-radius:0 !important;
+    background:transparent !important; flex:1;
+    padding:0.65rem 0.9rem; font-size:0.93rem;
+    outline:none; box-shadow:none !important;
 }
 
+/* Grille médias (galerie & menu) */
+.media-grid {
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(110px, 1fr));
+    gap:0.75rem;
+    margin-bottom:0.75rem;
+}
+.media-item {
+    position:relative; border-radius:10px; overflow:hidden;
+    border:1px solid var(--border); background:var(--cream);
+    aspect-ratio:1; display:flex; align-items:center; justify-content:center;
+}
+.media-item img {
+    width:100%; height:100%; object-fit:cover;
+}
+.media-item--pdf {
+    flex-direction:column; gap:0.3rem; padding:0.5rem; text-align:center;
+}
+.media-item--pdf span { font-size:1.8rem; }
+.media-item--pdf p {
+    font-size:0.65rem; color:var(--muted); word-break:break-all;
+    line-height:1.3; overflow:hidden; display:-webkit-box;
+    -webkit-line-clamp:3; -webkit-box-orient:vertical;
+}
+.media-item a.media-open {
+    position:absolute; inset:0; display:flex; align-items:center;
+    justify-content:center; background:rgba(0,0,0,0);
+    transition:background 0.2s; text-decoration:none;
+}
+.media-item a.media-open:hover { background:rgba(0,0,0,0.35); }
+.media-item a.media-open::after {
+    content:'↗'; color:#fff; font-size:1.4rem; font-weight:700;
+    opacity:0; transition:opacity 0.2s;
+}
+.media-item a.media-open:hover::after { opacity:1; }
+.media-delete-cb {
+    position:absolute; top:5px; right:5px; z-index:2;
+    width:18px; height:18px; accent-color:var(--danger); cursor:pointer;
+}
+
+/* Horaires */
 .horaires-admin-grid {
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 0.55rem;
+    display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:0.55rem;
 }
 .horaire-admin-row {
-    display: flex; align-items: center; gap: 0.75rem;
-    background: var(--cream); border: 1px solid var(--border);
-    border-radius: 10px; padding: 0.6rem 0.9rem;
+    display:flex; align-items:center; gap:0.75rem;
+    background:var(--cream); border:1px solid var(--border);
+    border-radius:10px; padding:0.6rem 0.9rem;
 }
 .horaire-toggle-label {
-    display: flex; align-items: center; gap: 0.5rem;
-    cursor: pointer; flex-shrink: 0; width: 72px;
+    display:flex; align-items:center; gap:0.5rem;
+    cursor:pointer; flex-shrink:0; width:72px;
 }
-.horaire-toggle-label input[type="checkbox"] {
-    width: 16px; height: 16px; accent-color: var(--green); cursor: pointer;
-}
-.horaire-jour-name { font-size: 0.82rem; font-weight: 700; color: var(--dark); }
-.horaire-times-wrap { display: flex; align-items: center; gap: 0.4rem; flex: 1; }
-.horaire-times-wrap.horaire-disabled { display: none; }
+.horaire-toggle-label input[type="checkbox"] { width:16px; height:16px; accent-color:var(--green); cursor:pointer; }
+.horaire-jour-name { font-size:0.82rem; font-weight:700; color:var(--dark); }
+.horaire-times-wrap { display:flex; align-items:center; gap:0.4rem; flex:1; }
+.horaire-times-wrap.horaire-disabled { display:none; }
 .horaire-time-input {
-    border: 1px solid var(--border) !important; border-radius: 7px !important;
-    padding: 0.4rem 0.5rem !important; font-size: 0.85rem !important;
-    background: #fff !important; flex: 1; min-width: 0;
-    font-family: 'DM Sans', sans-serif; outline: none; transition: border-color 0.2s;
+    border:1px solid var(--border) !important; border-radius:7px !important;
+    padding:0.4rem 0.5rem !important; font-size:0.85rem !important;
+    background:#fff !important; flex:1; min-width:0;
+    font-family:'DM Sans', sans-serif; outline:none; transition:border-color 0.2s;
 }
-.horaire-time-input:focus { border-color: var(--green) !important; }
-.horaire-time-input:disabled { background: var(--cream) !important; color: var(--muted) !important; }
-.horaire-sep { font-size: 0.85rem; color: var(--muted); flex-shrink: 0; }
-.horaire-closed-label { font-size: 0.78rem; color: var(--muted); font-style: italic; flex: 1; }
-.horaire-closed-label.hidden { display: none; }
+.horaire-time-input:focus { border-color:var(--green) !important; }
+.horaire-time-input:disabled { background:var(--cream) !important; color:var(--muted) !important; }
+.horaire-sep { font-size:0.85rem; color:var(--muted); flex-shrink:0; }
+.horaire-closed-label { font-size:0.78rem; color:var(--muted); font-style:italic; flex:1; }
+.horaire-closed-label.hidden { display:none; }
 
-/* Menu actuel */
-.menu-actuel {
-    display: flex; align-items: center; gap: 1rem;
-    background: var(--cream); border: 1px solid var(--border);
-    border-radius: 10px; padding: 0.9rem 1rem; margin-bottom: 0.8rem;
-}
-.menu-actuel-icon { font-size: 2rem; flex-shrink: 0; }
-.menu-actuel-info { flex: 1; min-width: 0; }
-.menu-actuel-info a {
-    font-size: 0.88rem; font-weight: 600; color: var(--green);
-    text-decoration: none; display: block; margin-bottom: 0.25rem;
-}
-.menu-actuel-info a:hover { text-decoration: underline; }
-
-@media (max-width: 640px) {
-    .horaires-admin-grid { grid-template-columns: 1fr; }
+@media (max-width:640px) {
+    .horaires-admin-grid { grid-template-columns:1fr; }
+    .media-grid { grid-template-columns:repeat(auto-fill, minmax(90px, 1fr)); }
 }
 </style>
 
@@ -97,51 +123,42 @@
                 <span class="badge badge--{{ $etablissement->statut }}">
                     @if($etablissement->statut === 'actif') ✅ Actif
                     @elseif($etablissement->statut === 'en_attente') ⏳ En attente
-                    @else 🚫 Suspendu
-                    @endif
+                    @else 🚫 Suspendu @endif
                 </span>
             @endisset
         </div>
 
         @if($errors->any())
-            <div class="alert alert-error" style="margin-bottom:1.5rem; border-radius:10px">
-                @foreach($errors->all() as $error)<div>• {{ $error }}</div>@endforeach
+            <div class="alert alert-error" style="margin-bottom:1.5rem;border-radius:10px">
+                @foreach($errors->all() as $e)<div>• {{ $e }}</div>@endforeach
             </div>
         @endif
 
-        <form
-            method="POST"
-            action="{{ isset($etablissement)
-                ? route('admin.update-etablissement', $etablissement)
-                : route('admin.store-etablissement') }}"
-            enctype="multipart/form-data"
-            id="etablissementForm"
-        >
+        <form method="POST"
+              action="{{ isset($etablissement) ? route('admin.update-etablissement', $etablissement) : route('admin.store-etablissement') }}"
+              enctype="multipart/form-data" id="etablissementForm">
             @csrf
             @isset($etablissement) @method('PUT') @endisset
 
-            {{-- ══ PARAMÈTRES ADMIN ═════════════════════════════════════ --}}
+            {{-- ══ PARAMÈTRES ADMIN ══════════════════════════════════ --}}
             <div class="form-section admin-section-highlight">
                 <h2>⚙️ Paramètres administrateur</h2>
-
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="statut">Statut de publication *</label>
+                        <label for="statut">Statut *</label>
                         <select id="statut" name="statut" required>
                             <option value="actif"      {{ old('statut', $etablissement->statut ?? 'en_attente') === 'actif'      ? 'selected' : '' }}>✅ Actif — visible immédiatement</option>
-                            <option value="en_attente" {{ old('statut', $etablissement->statut ?? 'en_attente') === 'en_attente' ? 'selected' : '' }}>⏳ En attente de validation</option>
+                            <option value="en_attente" {{ old('statut', $etablissement->statut ?? 'en_attente') === 'en_attente' ? 'selected' : '' }}>⏳ En attente</option>
                             <option value="suspendu"   {{ old('statut', $etablissement->statut ?? '') === 'suspendu'             ? 'selected' : '' }}>🚫 Suspendu</option>
                         </select>
                     </div>
-
                     <div class="form-group">
-                        <label for="user_id">Propriétaire <small style="font-weight:400; color:var(--muted)">(optionnel)</small></label>
+                        <label for="user_id">Propriétaire <small style="font-weight:400;color:var(--muted)">(optionnel)</small></label>
                         <select id="user_id" name="user_id">
                             <option value="">— Aucun / conserver l'actuel —</option>
-                            @foreach($proprietaires as $proprio)
-                                <option value="{{ $proprio->id }}"
-                                    {{ old('user_id', $etablissement->user_id ?? '') == $proprio->id ? 'selected' : '' }}>
-                                    {{ $proprio->nom }} — {{ $proprio->email }}
+                            @foreach($proprietaires as $p)
+                                <option value="{{ $p->id }}" {{ old('user_id', $etablissement->user_id ?? '') == $p->id ? 'selected' : '' }}>
+                                    {{ $p->nom }} — {{ $p->email }}
                                 </option>
                             @endforeach
                         </select>
@@ -154,32 +171,28 @@
                         @endisset
                     </div>
                 </div>
-
                 <div class="form-group">
                     <div class="form-check">
                         <input type="checkbox" id="en_vedette" name="en_vedette" value="1"
                                {{ old('en_vedette', $etablissement->en_vedette ?? false) ? 'checked' : '' }} />
                         <label for="en_vedette" style="cursor:pointer">
                             ⭐ Mettre en vedette
-                            <span class="form-hint" style="display:inline; font-weight:400">— apparaît dans "Coups de cœur"</span>
+                            <span class="form-hint" style="display:inline;font-weight:400">— apparaît dans "Coups de cœur"</span>
                         </label>
                     </div>
                 </div>
             </div>
 
-            {{-- ══ INFORMATIONS PRINCIPALES ═════════════════════════════ --}}
+            {{-- ══ INFORMATIONS PRINCIPALES ══════════════════════════ --}}
             <div class="form-section">
                 <h2>📋 Informations principales</h2>
-
                 <div class="form-row">
                     <div class="form-group">
                         <label for="ville_id">Ville *</label>
                         <select id="ville_id" name="ville_id" required>
                             <option value="">Choisir une ville</option>
-                            @foreach($villes as $ville)
-                                <option value="{{ $ville->id }}" {{ old('ville_id', $etablissement->ville_id ?? '') == $ville->id ? 'selected' : '' }}>
-                                    {{ $ville->emoji }} {{ $ville->nom }}
-                                </option>
+                            @foreach($villes as $v)
+                                <option value="{{ $v->id }}" {{ old('ville_id', $etablissement->ville_id ?? '') == $v->id ? 'selected' : '' }}>{{ $v->emoji }} {{ $v->nom }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -187,22 +200,17 @@
                         <label for="categorie_id">Catégorie *</label>
                         <select id="categorie_id" name="categorie_id" required>
                             <option value="">Choisir une catégorie</option>
-                            @foreach($categories as $cat)
-                                <option value="{{ $cat->id }}" {{ old('categorie_id', $etablissement->categorie_id ?? '') == $cat->id ? 'selected' : '' }}>
-                                    {{ $cat->emoji }} {{ $cat->nom }}
-                                </option>
+                            @foreach($categories as $c)
+                                <option value="{{ $c->id }}" {{ old('categorie_id', $etablissement->categorie_id ?? '') == $c->id ? 'selected' : '' }}>{{ $c->emoji }} {{ $c->nom }}</option>
                             @endforeach
                         </select>
                     </div>
                 </div>
-
                 <div class="form-group">
                     <label for="nom">Nom de l'établissement *</label>
-                    <input type="text" id="nom" name="nom"
-                           value="{{ old('nom', $etablissement->nom ?? '') }}"
+                    <input type="text" id="nom" name="nom" value="{{ old('nom', $etablissement->nom ?? '') }}"
                            placeholder="ex : Restaurant Le Palmier" maxlength="150" required />
                 </div>
-
                 <div class="form-group">
                     <label for="description">Description *</label>
                     <textarea id="description" name="description" rows="5" maxlength="2000"
@@ -210,14 +218,11 @@
                     >{{ old('description', $etablissement->description ?? '') }}</textarea>
                     <p class="form-hint">Spécialité, ambiance, clientèle, points forts…</p>
                 </div>
-
                 <div class="form-group">
                     <label for="adresse">Adresse complète *</label>
-                    <input type="text" id="adresse" name="adresse"
-                           value="{{ old('adresse', $etablissement->adresse ?? '') }}"
+                    <input type="text" id="adresse" name="adresse" value="{{ old('adresse', $etablissement->adresse ?? '') }}"
                            placeholder="ex : Quartier Cadjehoun, près du Carrefour..." maxlength="255" required />
                 </div>
-
                 <div class="form-group">
                     <label for="fourchette_prix">Fourchette de prix</label>
                     <input type="text" id="fourchette_prix" name="fourchette_prix"
@@ -226,10 +231,9 @@
                 </div>
             </div>
 
-            {{-- ══ CONTACTS ═════════════════════════════════════════════ --}}
+            {{-- ══ CONTACTS ═══════════════════════════════════════════ --}}
             <div class="form-section">
                 <h2>📞 Contacts</h2>
-
                 <div class="form-row">
                     <div class="form-group">
                         <label for="telephone">Téléphone</label>
@@ -253,7 +257,6 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="form-row">
                     <div class="form-group">
                         <label for="email">Email</label>
@@ -270,129 +273,112 @@
                 </div>
             </div>
 
-            {{-- ══ PHOTOS ════════════════════════════════════════════════ --}}
+            {{-- ══ PHOTO PRINCIPALE ═══════════════════════════════════ --}}
             <div class="form-section">
-                <h2>📸 Photos</h2>
-
-                {{-- Photo principale --}}
-                <div class="form-group">
-                    <label>Photo principale <small style="font-weight:400; color:var(--muted)">(optionnel)</small></label>
-                    @if(isset($etablissement) && $etablissement->photo_principale)
-                        <div class="current-photo">
-                            <img src="{{ Storage::url($etablissement->photo_principale) }}" alt="Photo actuelle">
-                            <div>
-                                <p style="font-size:0.82rem; font-weight:600; color:var(--dark); margin-bottom:0.4rem">Photo actuelle</p>
-                                <div class="form-check">
-                                    <input type="checkbox" id="supprimer_photo_principale" name="supprimer_photo_principale" value="1" />
-                                    <label for="supprimer_photo_principale" style="font-size:0.83rem; color:var(--danger); cursor:pointer">Supprimer cette photo</label>
-                                </div>
+                <h2>🖼️ Photo principale <small style="font-weight:400;font-size:0.85rem;color:var(--muted)">(optionnel)</small></h2>
+                @if(isset($etablissement) && $etablissement->photo_principale)
+                    <div class="current-photo">
+                        <img src="{{ Storage::url($etablissement->photo_principale) }}" alt="Photo actuelle">
+                        <div>
+                            <p style="font-size:0.82rem;font-weight:600;color:var(--dark);margin-bottom:0.4rem">Photo actuelle</p>
+                            <div class="form-check">
+                                <input type="checkbox" id="supprimer_photo_principale" name="supprimer_photo_principale" value="1" />
+                                <label for="supprimer_photo_principale" style="font-size:0.83rem;color:var(--danger);cursor:pointer">Supprimer cette photo</label>
                             </div>
                         </div>
-                    @endif
-                    <div class="upload-zone" id="mainPhotoZone">
-                        <input type="file" id="photo_principale" name="photo_principale"
-                               accept="image/jpeg,image/png,image/webp"
-                               onchange="previewMainPhoto(this)" />
-                        <label for="photo_principale" class="upload-label">
-                            <span class="upload-icon">🖼️</span>
-                            <span class="upload-text">{{ isset($etablissement) && $etablissement->photo_principale ? 'Remplacer la photo principale' : 'Choisir une photo principale' }}</span>
-                            <span class="upload-hint">JPG, PNG ou WebP</span>
-                        </label>
-                        <div id="mainPhotoPreview" class="photo-preview-wrap" style="display:none">
-                            <img id="mainPhotoImg" src="" alt="Aperçu" />
-                            <button type="button" class="btn-remove-preview" onclick="removeMainPhoto()">✕ Supprimer</button>
-                        </div>
                     </div>
-                </div>
-
-                {{-- Galerie --}}
-                <div class="form-group">
-                    <label>Galerie de photos <small style="font-weight:400; color:var(--muted)">(optionnel — max. 6)</small></label>
-                    @if(isset($etablissement) && $etablissement->photos->count() > 0)
-                        <div class="galerie-existante" style="margin-bottom:0.5rem">
-                            @foreach($etablissement->photos as $photo)
-                                <div class="galerie-thumb" style="position:relative">
-                                    <img src="{{ Storage::url($photo->url) }}" alt="Photo galerie">
-                                    <label style="position:absolute;inset:0;border-radius:8px;cursor:pointer;display:flex;align-items:flex-start;justify-content:flex-end;padding:4px" title="Cocher pour supprimer">
-                                        <input type="checkbox" name="supprimer_photos[]" value="{{ $photo->id }}"
-                                               style="width:16px;height:16px;accent-color:var(--danger)" />
-                                    </label>
-                                </div>
-                            @endforeach
-                        </div>
-                        <p class="form-hint" style="margin-bottom:0.8rem">Cochez les photos à supprimer.</p>
-                    @endif
-                    <div class="upload-zone">
-                        <input type="file" id="photos" name="photos[]" multiple
-                               accept="image/jpeg,image/png,image/webp"
-                               onchange="previewGalerie(this)" />
-                        <label for="photos" class="upload-label">
-                            <span class="upload-icon">📷</span>
-                            <span class="upload-text">Choisir des photos de galerie</span>
-                            <span class="upload-hint">JPG, PNG ou WebP · Ctrl pour sélection multiple</span>
-                        </label>
+                @endif
+                <div class="upload-zone" id="mainPhotoZone">
+                    <input type="file" id="photo_principale" name="photo_principale"
+                           accept="image/jpeg,image/png,image/webp" onchange="previewMainPhoto(this)" />
+                    <label for="photo_principale" class="upload-label">
+                        <span class="upload-icon">🖼️</span>
+                        <span class="upload-text">{{ isset($etablissement) && $etablissement->photo_principale ? 'Remplacer la photo principale' : 'Choisir une photo principale' }}</span>
+                        <span class="upload-hint">JPG, PNG ou WebP</span>
+                    </label>
+                    <div id="mainPhotoPreview" class="photo-preview-wrap" style="display:none">
+                        <img id="mainPhotoImg" src="" alt="Aperçu" />
+                        <button type="button" class="btn-remove-preview" onclick="removeMainPhoto()">✕ Supprimer</button>
                     </div>
-                    <div id="galeriePreview" class="galerie-preview-grid"></div>
                 </div>
             </div>
 
-            {{-- ══ MENU ══════════════════════════════════════════════════ --}}
+            {{-- ══ GALERIE ══════════════════════════════════════════════ --}}
             <div class="form-section">
-                <h2>🍽️ Menu <small style="font-weight:400; font-size:0.85rem; color:var(--muted)">(optionnel)</small></h2>
-                <p class="form-hint" style="margin-bottom:1rem">
-                    Uploadez une photo ou un PDF de votre menu. Les visiteurs pourront le consulter directement sur la fiche.
-                </p>
+                <h2>📷 Galerie de photos <small style="font-weight:400;font-size:0.85rem;color:var(--muted)">(optionnel — sans limite)</small></h2>
 
-                {{-- Menu actuel --}}
-                @if(isset($etablissement) && $etablissement->menu)
-                    @php
-                        $menuExt = strtolower(pathinfo($etablissement->menu, PATHINFO_EXTENSION));
-                        $isPdf   = $menuExt === 'pdf';
-                    @endphp
-                    <div class="menu-actuel">
-                        <div class="menu-actuel-icon">{{ $isPdf ? '📄' : '🖼️' }}</div>
-                        <div class="menu-actuel-info">
-                            <a href="{{ Storage::url($etablissement->menu) }}" target="_blank">
-                                {{ $isPdf ? 'Voir le menu PDF' : 'Voir la photo du menu' }} ↗
-                            </a>
-                            <div class="form-check">
-                                <input type="checkbox" id="supprimer_menu" name="supprimer_menu" value="1" />
-                                <label for="supprimer_menu" style="font-size:0.83rem; color:var(--danger); cursor:pointer">
-                                    Supprimer le menu actuel
-                                </label>
+                {{-- Photos existantes --}}
+                @if(isset($etablissement) && $etablissement->photos->count() > 0)
+                    <p class="form-hint" style="margin-bottom:0.6rem">Cochez les photos à supprimer, puis ajoutez-en de nouvelles ci-dessous.</p>
+                    <div class="media-grid">
+                        @foreach($etablissement->photos as $photo)
+                            <div class="media-item">
+                                <img src="{{ Storage::url($photo->url) }}" alt="Photo galerie">
+                                <a href="{{ Storage::url($photo->url) }}" target="_blank" class="media-open" title="Ouvrir"></a>
+                                <input type="checkbox" name="supprimer_photos[]" value="{{ $photo->id }}"
+                                       class="media-delete-cb" title="Cocher pour supprimer" />
                             </div>
-                        </div>
-                        @if(!$isPdf)
-                            <img src="{{ Storage::url($etablissement->menu) }}" alt="Menu"
-                                 style="width:80px; height:60px; object-fit:cover; border-radius:8px; border:1px solid var(--border); flex-shrink:0">
-                        @endif
+                        @endforeach
                     </div>
                 @endif
 
-                <div class="upload-zone" id="menuZone">
-                    <input type="file" id="menu" name="menu"
-                           accept="image/jpeg,image/png,image/webp,application/pdf"
-                           onchange="previewMenu(this)" />
-                    <label for="menu" class="upload-label">
-                        <span class="upload-icon">🍽️</span>
-                        <span class="upload-text">{{ isset($etablissement) && $etablissement->menu ? 'Remplacer le menu' : 'Ajouter un menu' }}</span>
-                        <span class="upload-hint">JPG, PNG, WebP ou PDF</span>
+                <div class="upload-zone">
+                    <input type="file" id="photos" name="photos[]" multiple
+                           accept="image/jpeg,image/png,image/webp" onchange="previewGalerie(this)" />
+                    <label for="photos" class="upload-label">
+                        <span class="upload-icon">📷</span>
+                        <span class="upload-text">Ajouter des photos</span>
+                        <span class="upload-hint">JPG, PNG ou WebP · Ctrl ou ⌘ pour sélection multiple</span>
                     </label>
-                    <div id="menuPreview" class="photo-preview-wrap" style="display:none">
-                        <img id="menuImg" src="" alt="Aperçu menu" />
-                        <div>
-                            <p id="menuFileName" style="font-size:0.83rem; font-weight:600; color:var(--dark)"></p>
-                            <button type="button" class="btn-remove-preview" onclick="removeMenu()">✕ Supprimer</button>
-                        </div>
-                    </div>
                 </div>
+                <div id="galeriePreview" class="media-grid" style="margin-top:0.75rem"></div>
+            </div>
+
+            {{-- ══ MENU ═════════════════════════════════════════════════ --}}
+            <div class="form-section">
+                <h2>🍽️ Menu <small style="font-weight:400;font-size:0.85rem;color:var(--muted)">(optionnel — photos et/ou PDFs)</small></h2>
+                <p class="form-hint" style="margin-bottom:1rem">
+                    Ajoutez autant de pages de menu que nécessaire. Chaque fichier sera cliquable sur la fiche.
+                    Les PDFs s'ouvrent directement dans le navigateur.
+                </p>
+
+                {{-- Menus existants --}}
+                @if(isset($etablissement) && $etablissement->menus->count() > 0)
+                    <p class="form-hint" style="margin-bottom:0.6rem">Cochez les fichiers à supprimer.</p>
+                    <div class="media-grid">
+                        @foreach($etablissement->menus as $menu)
+                            <div class="media-item {{ $menu->is_pdf ? 'media-item--pdf' : '' }}">
+                                @if($menu->is_pdf)
+                                    <span>📄</span>
+                                    <p>{{ basename($menu->url) }}</p>
+                                @else
+                                    <img src="{{ Storage::url($menu->url) }}" alt="Menu">
+                                @endif
+                                <a href="{{ Storage::url($menu->url) }}" target="_blank" class="media-open" title="Ouvrir"></a>
+                                <input type="checkbox" name="supprimer_menus[]" value="{{ $menu->id }}"
+                                       class="media-delete-cb" title="Cocher pour supprimer" />
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+
+                <div class="upload-zone">
+                    <input type="file" id="menus" name="menus[]" multiple
+                           accept="image/jpeg,image/png,image/webp,application/pdf"
+                           onchange="previewMenus(this)" />
+                    <label for="menus" class="upload-label">
+                        <span class="upload-icon">🍽️</span>
+                        <span class="upload-text">Ajouter des pages de menu</span>
+                        <span class="upload-hint">JPG, PNG, WebP ou PDF · Ctrl ou ⌘ pour sélection multiple</span>
+                    </label>
+                </div>
+                <div id="menusPreview" class="media-grid" style="margin-top:0.75rem"></div>
             </div>
 
             {{-- ══ SERVICES ══════════════════════════════════════════════ --}}
             <div class="form-section">
-                <h2>✅ Services proposés <small style="font-weight:400; font-size:0.85rem; color:var(--muted)">(max. 8)</small></h2>
+                <h2>✅ Services proposés <small style="font-weight:400;font-size:0.85rem;color:var(--muted)">(max. 8)</small></h2>
                 <p class="form-hint" style="margin-bottom:1rem">Ex : WiFi, Climatisation, Parking, Petit-déjeuner…</p>
-
                 <div class="services-inputs" id="servicesInputs">
                     @if(isset($etablissement) && $etablissement->services->count() > 0)
                         @foreach($etablissement->services as $service)
@@ -403,8 +389,7 @@
                     @else
                         @php $servicesOld = old('services', []); @endphp
                         @for($i = 0; $i < max(3, count($servicesOld)); $i++)
-                            <input type="text" name="services[]"
-                                   value="{{ $servicesOld[$i] ?? '' }}"
+                            <input type="text" name="services[]" value="{{ $servicesOld[$i] ?? '' }}"
                                    placeholder="Service {{ $i + 1 }}" maxlength="60" />
                         @endfor
                     @endif
@@ -414,8 +399,7 @@
 
             {{-- ══ HORAIRES ══════════════════════════════════════════════ --}}
             <div class="form-section">
-                <h2>🕐 Horaires d'ouverture <small style="font-weight:400; font-size:0.85rem; color:var(--muted)">(optionnel)</small></h2>
-
+                <h2>🕐 Horaires d'ouverture <small style="font-weight:400;font-size:0.85rem;color:var(--muted)">(optionnel)</small></h2>
                 <div class="horaires-admin-grid">
                     @foreach($jours as $jour)
                         @php
@@ -455,6 +439,7 @@
 </div>
 
 <script>
+// ── Téléphone béninois ────────────────────────────────────────────────────
 (function () {
     function onlyDigits(v) { return (v || '').replace(/\D+/g, ''); }
     function toLocalDigits(v) {
@@ -464,17 +449,11 @@
         if (d.startsWith('01')) return d.slice(0, 10);
         return ('01' + d.slice(0, 8)).slice(0, 10);
     }
-    function formatPhone(v) {
-        const d = toLocalDigits(v);
-        return d.match(/.{1,2}/g)?.join(' ') ?? '01';
-    }
+    function formatPhone(v) { return toLocalDigits(v).match(/.{1,2}/g)?.join(' ') ?? '01'; }
     document.querySelectorAll('[data-benin-phone]').forEach(input => {
         input.value = formatPhone(input.value || '01');
-        input.addEventListener('input', () => { input.value = formatPhone(input.value); });
-        input.addEventListener('paste', e => {
-            e.preventDefault();
-            input.value = formatPhone((e.clipboardData || window.clipboardData).getData('text'));
-        });
+        input.addEventListener('input', () => input.value = formatPhone(input.value));
+        input.addEventListener('paste', e => { e.preventDefault(); input.value = formatPhone((e.clipboardData || window.clipboardData).getData('text')); });
     });
     document.getElementById('etablissementForm').addEventListener('submit', () => {
         document.querySelectorAll('[data-benin-phone]').forEach(input => {
@@ -484,35 +463,36 @@
     });
 })();
 
-function toggleHoraire(checkbox) {
-    const row    = checkbox.closest('.horaire-admin-row');
-    const times  = row.querySelector('.horaire-times-wrap');
+// ── Horaires ──────────────────────────────────────────────────────────────
+function toggleHoraire(cb) {
+    const row   = cb.closest('.horaire-admin-row');
+    const times = row.querySelector('.horaire-times-wrap');
     const closed = row.querySelector('.horaire-closed-label');
-    times.querySelectorAll('input').forEach(i => i.disabled = !checkbox.checked);
-    times.classList.toggle('horaire-disabled', !checkbox.checked);
-    closed.classList.toggle('hidden', checkbox.checked);
+    times.querySelectorAll('input').forEach(i => i.disabled = !cb.checked);
+    times.classList.toggle('horaire-disabled', !cb.checked);
+    closed.classList.toggle('hidden', cb.checked);
 }
 
+// ── Services ──────────────────────────────────────────────────────────────
 function addService() {
-    const container = document.getElementById('servicesInputs');
-    const count = container.querySelectorAll('input').length;
-    if (count >= 8) { alert('Maximum 8 services autorisés.'); return; }
-    const input = document.createElement('input');
-    input.type = 'text'; input.name = 'services[]';
-    input.placeholder = 'Service ' + (count + 1); input.maxLength = 60;
-    container.appendChild(input);
-    input.focus();
+    const c = document.getElementById('servicesInputs');
+    if (c.querySelectorAll('input').length >= 8) { alert('Maximum 8 services.'); return; }
+    const i = document.createElement('input');
+    i.type = 'text'; i.name = 'services[]';
+    i.placeholder = 'Service ' + (c.querySelectorAll('input').length + 1); i.maxLength = 60;
+    c.appendChild(i); i.focus();
 }
 
+// ── Photo principale ──────────────────────────────────────────────────────
 function previewMainPhoto(input) {
-    if (!input.files || !input.files[0]) return;
-    const reader = new FileReader();
-    reader.onload = e => {
+    if (!input.files?.[0]) return;
+    const r = new FileReader();
+    r.onload = e => {
         document.getElementById('mainPhotoImg').src = e.target.result;
         document.getElementById('mainPhotoPreview').style.display = 'flex';
         document.querySelector('#mainPhotoZone .upload-label').style.display = 'none';
     };
-    reader.readAsDataURL(input.files[0]);
+    r.readAsDataURL(input.files[0]);
 }
 function removeMainPhoto() {
     document.getElementById('photo_principale').value = '';
@@ -520,58 +500,40 @@ function removeMainPhoto() {
     document.querySelector('#mainPhotoZone .upload-label').style.display = 'flex';
 }
 
-function previewGalerie(input) {
-    const container = document.getElementById('galeriePreview');
-    container.innerHTML = '';
-    if (!input.files || !input.files.length) return;
-    Array.from(input.files).slice(0, 6).forEach((file, i) => {
-        const reader = new FileReader();
-        reader.onload = e => {
-            const div = document.createElement('div');
-            div.className = 'galerie-thumb-preview';
-            div.innerHTML = `<img src="${e.target.result}" alt="Photo ${i+1}"><span class="galerie-thumb-num">${i+1}</span>`;
-            container.appendChild(div);
-        };
-        reader.readAsDataURL(file);
+// ── Prévisualisation générique (galerie + menu) ───────────────────────────
+function buildMediaPreviews(files, container) {
+    Array.from(files).forEach(file => {
+        const isPdf = file.type === 'application/pdf';
+        const item  = document.createElement('div');
+        item.className = 'media-item' + (isPdf ? ' media-item--pdf' : '');
+
+        if (isPdf) {
+            item.innerHTML = `<span>📄</span><p>${file.name}</p>`;
+        } else {
+            const r = new FileReader();
+            r.onload = e => {
+                const img = document.createElement('img');
+                img.src = e.target.result; img.alt = file.name;
+                item.appendChild(img);
+            };
+            r.readAsDataURL(file);
+        }
+        container.appendChild(item);
     });
-    if (input.files.length > 6) {
-        const p = document.createElement('p');
-        p.className = 'form-hint'; p.style.marginTop = '0.5rem';
-        p.textContent = '⚠️ Seules les 6 premières photos seront enregistrées.';
-        container.appendChild(p);
-    }
 }
 
-function previewMenu(input) {
-    if (!input.files || !input.files[0]) return;
-    const file = input.files[0];
-    const isPdf = file.type === 'application/pdf';
-    const preview = document.getElementById('menuPreview');
-    const img     = document.getElementById('menuImg');
-    const name    = document.getElementById('menuFileName');
-
-    name.textContent = file.name;
-    document.querySelector('#menuZone .upload-label').style.display = 'none';
-
-    if (isPdf) {
-        img.style.display = 'none';
-        name.textContent = '📄 ' + file.name;
-    } else {
-        const reader = new FileReader();
-        reader.onload = e => {
-            img.src = e.target.result;
-            img.style.display = 'block';
-        };
-        reader.readAsDataURL(file);
-    }
-
-    preview.style.display = 'flex';
+function previewGalerie(input) {
+    const c = document.getElementById('galeriePreview');
+    c.innerHTML = '';
+    if (!input.files?.length) return;
+    buildMediaPreviews(input.files, c);
 }
-function removeMenu() {
-    document.getElementById('menu').value = '';
-    document.getElementById('menuPreview').style.display = 'none';
-    document.getElementById('menuImg').style.display = 'none';
-    document.querySelector('#menuZone .upload-label').style.display = 'flex';
+
+function previewMenus(input) {
+    const c = document.getElementById('menusPreview');
+    c.innerHTML = '';
+    if (!input.files?.length) return;
+    buildMediaPreviews(input.files, c);
 }
 </script>
 

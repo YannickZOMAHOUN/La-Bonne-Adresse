@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
+use 
 
 class Etablissement extends Model
 {
@@ -85,4 +86,8 @@ class Etablissement extends Model
         $numero = preg_replace('/\D/', '', $this->whatsapp);
         return "https://wa.me/{$numero}";
     }
+    public function menus(): HasMany
+{
+    return $this->hasMany(Menu::class)->orderBy('ordre');
+}
 }
