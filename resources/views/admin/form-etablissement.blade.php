@@ -402,13 +402,19 @@
                 <h2>🕐 Horaires d'ouverture <small style="font-weight:400;font-size:0.85rem;color:var(--muted)">(optionnel)</small></h2>
                 <div class="horaires-admin-grid">
                     @foreach($jours as $jour)
-                        @php
-                            $horaires = $etablissement->horaires ?? [];
-                            $horaire  = old("horaires.{$jour}", $horaires[$jour] ?? null);
-                            $ouvert   = !is_null($horaire) && $horaire !== 'Fermé';
-                            $debut    = $ouvert ? (explode(' – ', $horaire)[0] ?? '08:00') : '08:00';
-                            $fin      = $ouvert ? (explode(' – ', $horaire)[1] ?? '18:00') : '18:00';
-                        @endphp
+                       @php
+    $horaires = $etablissement->horaires ?? [];
+    $horaire  = old("horaires.{$jour}", $horaires[$jour] ?? null);
+
+    // 👇 VÉRIFICATION IMPORTANTE : s'assurer que $horaire est une chaîne
+    if (is_array($horaire)) {
+        $horaire = null;
+    }
+
+    $ouvert   = !is_null($horaire) && $horaire !== 'Fermé';
+    $debut    = $ouvert ? (is_string($horaire) ? explode(' – ', $horaire)[0] ?? '08:00' : '08:00') : '08:00';
+    $fin      = $ouvert ? (is_string($horaire) ? explode(' – ', $horaire)[1] ?? '18:00' : '18:00') : '18:00';
+@endphp
                         <div class="horaire-admin-row">
                             <label class="horaire-toggle-label">
                                 <input type="checkbox" name="horaires[{{ $jour }}][ouvert]" value="1"
