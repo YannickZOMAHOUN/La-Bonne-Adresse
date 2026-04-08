@@ -1415,7 +1415,7 @@ class EtablissementSeeder extends Seeder
                 'email' => 'contact@vieillemarmite.com',
                 'site_web' => 'https://www.vieillemarmite.com',
                 'latitude' => 9.362000,
-                'longitude'
+                'longitude'=> 2.644000,
                 'horaires' => ['Mardi-Samedi' => '19h-23h'],
                 'fourchette_prix' => '5000 - 15000 FCFA',
                 'photo_principale' => 'https://via.placeholder.com/1024x768.png?text=Vieille+Marmite',
@@ -1453,7 +1453,7 @@ class EtablissementSeeder extends Seeder
                 'email' => 'contact@himalayarestaurant.com',
                 'site_web' => 'https://www.himalayarestaurant.com',
                 'latitude' => 9.364000,
-                'longitude' => 2.64700
+                'longitude' => 2.64700,
                 'horaires' => ['Lundi-Dimanche' => '11h-22h'],
               'fourchette_prix' => '7000 - 20000 FCFA',
                 'photo_principale' => 'https://via.placeholder.com/1024x768.png?text=Himalaya+Restaurant',
