@@ -398,41 +398,11 @@
             </div>
 
             {{-- ══ HORAIRES ══════════════════════════════════════════════ --}}
-            <div class="form-section">
-                <h2>🕐 Horaires d'ouverture <small style="font-weight:400;font-size:0.85rem;color:var(--muted)">(optionnel)</small></h2>
-                <div class="horaires-admin-grid">
-                    @foreach($jours as $jour)
-                       @php
-    $horaires = $etablissement->horaires ?? [];
-    $horaire  = old("horaires.{$jour}", $horaires[$jour] ?? null);
-
-    // 👇 VÉRIFICATION IMPORTANTE : s'assurer que $horaire est une chaîne
-    if (is_array($horaire)) {
-        $horaire = null;
-    }
-
-    $ouvert   = !is_null($horaire) && $horaire !== 'Fermé';
-    $debut    = $ouvert ? (is_string($horaire) ? explode(' – ', $horaire)[0] ?? '08:00' : '08:00') : '08:00';
-    $fin      = $ouvert ? (is_string($horaire) ? explode(' – ', $horaire)[1] ?? '18:00' : '18:00') : '18:00';
-@endphp
-                        <div class="horaire-admin-row">
-                            <label class="horaire-toggle-label">
-                                <input type="checkbox" name="horaires[{{ $jour }}][ouvert]" value="1"
-                                       {{ $ouvert ? 'checked' : '' }} onchange="toggleHoraire(this)" />
-                                <span class="horaire-jour-name">{{ substr($jour, 0, 3) }}</span>
-                            </label>
-                            <div class="horaire-times-wrap {{ $ouvert ? '' : 'horaire-disabled' }}">
-                                <input type="time" name="horaires[{{ $jour }}][debut]" value="{{ $debut }}"
-                                       {{ !$ouvert ? 'disabled' : '' }} class="horaire-time-input" />
-                                <span class="horaire-sep">–</span>
-                                <input type="time" name="horaires[{{ $jour }}][fin]" value="{{ $fin }}"
-                                       {{ !$ouvert ? 'disabled' : '' }} class="horaire-time-input" />
-                            </div>
-                            <span class="horaire-closed-label {{ $ouvert ? 'hidden' : '' }}">Fermé</span>
-                        </div>
-                    @endforeach
-                </div>
-            </div>
+                {{-- ══ HORAIRES ══════════════════════════════════════════════════ --}}
+@include('proprietaire.partials.horaires', [
+    'horaires' => old('horaires', isset($etablissement) ? $etablissement->horaires : null),
+    'jours'    => $jours,
+])
 
             <div class="form-actions">
                 <a href="{{ route('admin.etablissements') }}" class="btn-secondary">Annuler</a>
