@@ -76,6 +76,8 @@ class DatabaseSeeder extends Seeder
 
         $this->command->info('✅ Données initiales créées avec succès !');
         $this->command->info('📧 Admin : admin@bonnesadresses.bj / Admin@2025!');
-        //$this->call(EstablishmentSeeder::class);
+        $this->call(BeninAddressesImportSeeder::class);
+        //$this->call(EtablissementSeeder::class);
+
     }
 }
