@@ -152,6 +152,23 @@
     .hero-stats    { gap:1rem; }
     .ville-card    { height:160px; }
 }
+/* Fix search-box desktop alignment */
+@media (min-width: 641px) {
+    .search-box {
+        flex-wrap: nowrap;
+        max-width: 720px;
+    }
+
+    .search-field {
+        flex: 1 1 0;
+        min-width: 0;
+    }
+
+    .btn-search {
+        flex-shrink: 0;
+        white-space: nowrap;
+    }
+}
 </style>
 @endpush
 

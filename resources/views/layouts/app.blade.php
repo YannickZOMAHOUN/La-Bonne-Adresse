@@ -72,14 +72,6 @@
 
         <ul class="nav-links" id="navLinks">
             <li><a href="{{ route('adresses.liste') }}" class="{{ request()->routeIs('adresses.*') && !request('ville') ? 'active' : '' }}">Explorer</a></li>
-            @foreach($villesNav as $villeNav)
-                <li>
-                    <a href="{{ route('adresses.liste', ['ville' => $villeNav->slug]) }}"
-                       class="{{ request('ville') === $villeNav->slug ? 'active' : '' }}">
-                        {{ $villeNav->nom }}
-                    </a>
-                </li>
-            @endforeach
 
             @auth
                 @if(auth()->user()->isAdmin())
