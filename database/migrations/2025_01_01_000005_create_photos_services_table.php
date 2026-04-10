@@ -12,7 +12,7 @@ return new class extends Migration
         Schema::create('photos', function (Blueprint $table) {
             $table->id();
             $table->foreignId('etablissement_id')->constrained()->onDelete('cascade');
-            $table->text('url');
+            $table->string('url');
             $table->string('legende')->nullable();
             $table->integer('ordre')->default(0);
             $table->timestamps();
