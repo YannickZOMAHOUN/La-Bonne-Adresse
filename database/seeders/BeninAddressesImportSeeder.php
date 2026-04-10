@@ -421,7 +421,7 @@ class BeninAddressesImportSeeder extends Seeder
                     ],
                     [
                         'nom'       => 'Queen\'s Hotel',
-                        'adresse'   => '1ère Rue à gauche après l[\'Eglise Catholique, Djassin-Houinvié, Porto-Novo, Benin',
+                        'adresse'   => '1ère Rue à gauche après l\'Eglise Catholique, Djassin-Houinvié, Porto-Novo, Benin',
                         'telephone' => '+229 95050885',
                     ],
                     [
