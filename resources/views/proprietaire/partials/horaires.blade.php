@@ -364,11 +364,6 @@ document.addEventListener('DOMContentLoaded', function () {
             alert('Veuillez renseigner une plage horaire (début et fin).');
             return;
         }
-        if (fin <= debut) {
-            alert("L'heure de fermeture doit être après l'heure d'ouverture.");
-            return;
-        }
-
         const joursSelectionnes = [...document.querySelectorAll('.copier-jour-cb:checked')]
             .map(cb => cb.value);
 

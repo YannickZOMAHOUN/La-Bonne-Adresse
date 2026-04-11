@@ -2,11 +2,12 @@
 
 namespace App\Providers;
 
-use App\Models\Ville;
-use App\Models\Categorie;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
+use App\Models\Ville;
+use App\Models\Categorie;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,8 +20,10 @@ class AppServiceProvider extends ServiceProvider
             URL::forceScheme('https');
         }
 
+        // Utilise le template de pagination personnalisé LBA
+        Paginator::defaultView('vendor.pagination.tailwind');
+
         // Injecte villes et catégories dans TOUTES les vues
-        // (y compris les pages d'erreur 404, 500, etc.)
         View::composer('*', function ($view) {
             $data = $view->getData();
 

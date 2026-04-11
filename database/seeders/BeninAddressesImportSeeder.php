@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Database\Seeders;
 
 use App\Models\Categorie;
@@ -10,58 +12,81 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use InvalidArgumentException;
 
 class BeninAddressesImportSeeder extends Seeder
 {
+    private const OWNER_EMAIL = 'import@bonnesadresses.bj';
+    private const OWNER_DEFAULT_PASSWORD = 'Import@2026!';
+
     public function run(): void
     {
-        $villes = $this->seedVilles();
-        $categories = $this->seedCategories();
-        $owner = $this->seedOwner();
+        DB::transaction(function (): void {
+            $villes = $this->seedVilles();
+            $categories = $this->seedCategories();
+            $owner = $this->seedOwner();
 
-        $total = 0;
+            $total = 0;
+            $statsParVille = [];
+            $statsParCategorie = [];
 
-        foreach ($this->catalogue() as $villeSlug => $parCategorie) {
-            foreach ($parCategorie as $categorieSlug => $items) {
-                foreach ($items as $item) {
-                    $ville = $villes[$villeSlug];
-                    $categorie = $categories[$categorieSlug];
-                    $slug = Str::slug($item['nom'] . '-' . $villeSlug . '-' . $categorieSlug);
-                    $photoPrincipale = $item['photos'][0]['url'] ?? null;
+            foreach ($this->catalogue() as $villeSlug => $parCategorie) {
+                $ville = $villes[$villeSlug] ?? null;
 
-                    $etablissement = Etablissement::updateOrCreate(
-                        ['slug' => $slug],
-                        [
-                            'user_id'         => $owner->id,
-                            'ville_id'        => $ville->id,
-                            'categorie_id'    => $categorie->id,
-                            'nom'             => $item['nom'],
-                            'slug'            => $slug,
-                            'description'     => $this->makeDescription($categorie->slug, $ville->nom, $item['adresse']),
-                            'adresse'         => $item['adresse'],
-                            'telephone'       => $item['telephone'] ?? null,
-                            'whatsapp'        => $item['telephone'] ?? null,
-                            'email'           => null,
-                            'site_web'        => $item['site_web'] ?? null,
-                            'latitude'        => null,
-                            'longitude'       => null,
-                            'horaires'        => $item['horaires'] ?? null,
-                            'fourchette_prix' => $item['fourchette_prix'] ?? null,
-                            'photo_principale' => $photoPrincipale,
-                            'statut'          => 'actif',
-                            'en_vedette'      => $item['en_vedette'] ?? false,
-                        ]
-                    );
+                if (! $ville) {
+                    throw new InvalidArgumentException("Ville introuvable pour le slug [{$villeSlug}].");
+                }
 
-                    $this->syncPhotos($etablissement->id, $item['photos'] ?? []);
-                    $total++;
+                foreach ($parCategorie as $categorieSlug => $items) {
+                    $categorie = $categories[$categorieSlug] ?? null;
+
+                    if (! $categorie) {
+                        throw new InvalidArgumentException("Catégorie introuvable pour le slug [{$categorieSlug}].");
+                    }
+
+                    foreach ($items as $item) {
+                        $payload = $this->normalizeItem($item);
+                        $slug = $this->buildSlug($payload['nom'], $villeSlug, $categorieSlug);
+
+                        $etablissement = Etablissement::updateOrCreate(
+                            ['slug' => $slug],
+                            [
+                                'user_id'           => $owner->id,
+                                'ville_id'          => $ville->id,
+                                'categorie_id'      => $categorie->id,
+                                'nom'               => $payload['nom'],
+                                'slug'              => $slug,
+                                'description'       => $this->makeDescription($categorie->slug, $ville->nom, $payload['adresse']),
+                                'adresse'           => $payload['adresse'],
+                                'telephone'         => $payload['telephone'],
+                                'whatsapp'          => $payload['whatsapp'],
+                                'email'             => $payload['email'],
+                                'site_web'          => $payload['site_web'],
+                                'latitude'          => $payload['latitude'],
+                                'longitude'         => $payload['longitude'],
+                                'horaires'          => $payload['horaires'],
+                                'fourchette_prix'   => $payload['fourchette_prix'],
+                                'photo_principale'  => $payload['photo_principale'],
+                                'statut'            => 'actif',
+                                'en_vedette'        => $payload['en_vedette'],
+                            ]
+                        );
+
+                        $this->syncPhotos($etablissement->id, $payload['photos']);
+
+                        $total++;
+                        $statsParVille[$ville->nom] = ($statsParVille[$ville->nom] ?? 0) + 1;
+                        $statsParCategorie[$categorie->nom] = ($statsParCategorie[$categorie->nom] ?? 0) + 1;
+                    }
                 }
             }
-        }
 
-        $this->command->info('✅ Seeder BeninAddressesImportSeeder exécuté avec succès.');
-        $this->command->info("📦 {$total} fiches importées dans les 6 villes.");
-        $this->command->info('🖼️ Des photos ont été ajoutées quand une image publique exploitable a été retrouvée.');
+            $this->logInfo('✅ Seeder BeninAddressesImportSeeder exécuté avec succès.');
+            $this->logInfo("📦 {$total} fiches importées ou mises à jour.");
+            $this->logInfo('🏙️ Répartition par ville : ' . $this->formatStats($statsParVille));
+            $this->logInfo('🗂️ Répartition par catégorie : ' . $this->formatStats($statsParCategorie));
+            $this->logInfo('🖼️ Les photos ont été synchronisées proprement pour chaque fiche.');
+        });
     }
 
     // -------------------------------------------------------------------------
@@ -149,16 +174,182 @@ class BeninAddressesImportSeeder extends Seeder
 
     private function seedOwner(): User
     {
-        return User::updateOrCreate(
-            ['email' => 'import@bonnesadresses.bj'],
+        $owner = User::firstOrCreate(
+            ['email' => self::OWNER_EMAIL],
             [
-                'nom'      => 'Import Bonnes Adresses',
+                'nom'       => 'Import Bonnes Adresses',
                 'telephone' => null,
-                'password' => Hash::make('Import@2026!'),
-                'role'     => 'proprietaire',
-                'statut'   => 'actif',
+                'password'  => Hash::make(self::OWNER_DEFAULT_PASSWORD),
+                'role'      => 'proprietaire',
+                'statut'    => 'actif',
             ]
         );
+
+        $owner->forceFill([
+            'nom'       => 'Import Bonnes Adresses',
+            'telephone' => $owner->telephone,
+            'role'      => 'proprietaire',
+            'statut'    => 'actif',
+        ]);
+
+        if (! $owner->password) {
+            $owner->password = Hash::make(self::OWNER_DEFAULT_PASSWORD);
+        }
+
+        if ($owner->isDirty()) {
+            $owner->save();
+        }
+
+        return $owner;
+    }
+
+    // -------------------------------------------------------------------------
+    // Normalisation des données
+    // -------------------------------------------------------------------------
+
+    private function normalizeItem(array $item): array
+    {
+        $nom = $this->cleanText($item['nom'] ?? '');
+        $adresse = $this->normalizeAddress($item['adresse'] ?? '');
+
+        if (! $nom || $adresse === '') {
+            throw new InvalidArgumentException('Chaque fiche doit contenir au minimum un nom et une adresse.');
+        }
+
+        $telephone = $this->normalizePhone($item['telephone'] ?? null);
+        $photos = $this->normalizePhotos($item['photos'] ?? []);
+
+        return [
+            'nom'              => $nom,
+            'adresse'          => $adresse,
+            'telephone'        => $telephone,
+            'whatsapp'         => $this->normalizePhone($item['whatsapp'] ?? $telephone),
+            'email'            => $this->normalizeEmail($item['email'] ?? null),
+            'site_web'         => $this->normalizeUrl($item['site_web'] ?? null),
+            'latitude'         => $this->normalizeCoordinate($item['latitude'] ?? null),
+            'longitude'        => $this->normalizeCoordinate($item['longitude'] ?? null),
+            'horaires'         => $this->cleanText($item['horaires'] ?? null),
+            'fourchette_prix'  => $this->cleanText($item['fourchette_prix'] ?? null),
+            'photo_principale' => $photos[0]['url'] ?? null,
+            'photos'           => $photos,
+            'en_vedette'       => (bool) ($item['en_vedette'] ?? false),
+        ];
+    }
+
+    private function cleanText(mixed $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $value = trim((string) $value);
+        $value = preg_replace('/\s+/u', ' ', $value) ?? $value;
+
+        return $value === '' ? null : $value;
+    }
+
+    private function normalizeAddress(mixed $value): string
+    {
+        $address = $this->cleanText($value) ?? '';
+        $address = str_replace([' ,', ' ;'], [',', ';'], $address);
+        $address = preg_replace('/\\bBenin\\b/u', 'Bénin', $address) ?? $address;
+        $address = preg_replace('/\\bPorto Novo\\b/u', 'Porto-Novo', $address) ?? $address;
+
+        return $address;
+    }
+
+    private function normalizePhone(mixed $value): ?string
+    {
+        $raw = $this->cleanText($value);
+
+        if (! $raw) {
+            return null;
+        }
+
+        $hasPlus = str_starts_with($raw, '+');
+        $digits = preg_replace('/\D+/', '', $raw) ?? '';
+
+        if ($digits === '') {
+            return null;
+        }
+
+        if (str_starts_with($digits, '229')) {
+            $local = substr($digits, 3);
+
+            return '+229 ' . trim(implode(' ', str_split($local, 2)));
+        }
+
+        if ($hasPlus) {
+            return '+' . trim(implode(' ', str_split($digits, 2)));
+        }
+
+        return trim(implode(' ', str_split($digits, 2)));
+    }
+
+    private function normalizeEmail(mixed $value): ?string
+    {
+        $email = $this->cleanText($value);
+
+        return $email && filter_var($email, FILTER_VALIDATE_EMAIL) ? mb_strtolower($email) : null;
+    }
+
+    private function normalizeUrl(mixed $value): ?string
+    {
+        $url = $this->cleanText($value);
+
+        if (! $url) {
+            return null;
+        }
+
+        if (! preg_match('#^https?://#i', $url)) {
+            $url = 'https://' . ltrim($url, '/');
+        }
+
+        return filter_var($url, FILTER_VALIDATE_URL) ? $url : null;
+    }
+
+    private function normalizeCoordinate(mixed $value): ?float
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        return is_numeric($value) ? (float) $value : null;
+    }
+
+    private function normalizePhotos(array $photos): array
+    {
+        $rows = [];
+        $seen = [];
+
+        foreach ($photos as $index => $photo) {
+            if (! is_array($photo)) {
+                continue;
+            }
+
+            $url = $this->normalizeUrl($photo['url'] ?? null);
+
+            if (! $url || isset($seen[$url])) {
+                continue;
+            }
+
+            $seen[$url] = true;
+            $rows[] = [
+                'url'     => $url,
+                'legende' => $this->cleanText($photo['legende'] ?? null),
+                'ordre'   => count($rows),
+            ];
+        }
+
+        return $rows;
+    }
+
+    private function buildSlug(string $nom, string $villeSlug, string $categorieSlug): string
+    {
+        $base = Str::slug(sprintf('%s-%s-%s', $nom, $villeSlug, $categorieSlug));
+        $base = trim($base, '-');
+
+        return Str::limit($base !== '' ? $base : Str::random(12), 180, '');
     }
 
     // -------------------------------------------------------------------------
@@ -169,16 +360,25 @@ class BeninAddressesImportSeeder extends Seeder
     {
         DB::table('photos')->where('etablissement_id', $etablissementId)->delete();
 
-        foreach ($photos as $index => $photo) {
-            DB::table('photos')->insert([
+        if ($photos === []) {
+            return;
+        }
+
+        $now = now();
+        $rows = [];
+
+        foreach ($photos as $photo) {
+            $rows[] = [
                 'etablissement_id' => $etablissementId,
                 'url'              => $photo['url'],
                 'legende'          => $photo['legende'] ?? null,
-                'ordre'            => $index,
-                'created_at'       => now(),
-                'updated_at'       => now(),
-            ]);
+                'ordre'            => $photo['ordre'] ?? count($rows),
+                'created_at'       => $now,
+                'updated_at'       => $now,
+            ];
         }
+
+        DB::table('photos')->insert($rows);
     }
 
     // -------------------------------------------------------------------------
@@ -188,11 +388,27 @@ class BeninAddressesImportSeeder extends Seeder
     private function makeDescription(string $categorieSlug, string $ville, string $adresse): string
     {
         return match ($categorieSlug) {
-            'hotels'               => "Hôtel référencé à {$ville}, situé à {$adresse}.",
-            'restaurants'          => "Restaurant référencé à {$ville}, situé à {$adresse}.",
-            'appartements-meubles' => "Appartement meublé référencé à {$ville}, situé à {$adresse}.",
-            default                => "Adresse référencée à {$ville}, située à {$adresse}.",
+            'hotels' => "Hôtel référencé à {$ville}, situé à {$adresse}. Fiche importée et harmonisée pour publication.",
+            'restaurants' => "Restaurant référencé à {$ville}, situé à {$adresse}. Fiche importée et harmonisée pour publication.",
+            'appartements-meubles' => "Appartement meublé référencé à {$ville}, situé à {$adresse}. Fiche importée et harmonisée pour publication.",
+            default => "Adresse référencée à {$ville}, située à {$adresse}. Fiche importée et harmonisée pour publication.",
         };
+    }
+
+    private function formatStats(array $stats): string
+    {
+        ksort($stats);
+
+        return collect($stats)
+            ->map(fn (int $count, string $label): string => sprintf('%s: %d', $label, $count))
+            ->implode(' | ');
+    }
+
+    private function logInfo(string $message): void
+    {
+        if ($this->command) {
+            $this->command->info($message);
+        }
     }
 
     // -------------------------------------------------------------------------

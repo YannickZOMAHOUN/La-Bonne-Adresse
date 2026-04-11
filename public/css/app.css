@@ -341,8 +341,85 @@ body {
 .btn-reset { font-size: 0.85rem; color: var(--muted); text-decoration: none; padding: 0.55rem 0; }
 .results-header { margin-bottom: 1.5rem; }
 .results-count { font-size: 0.9rem; color: var(--muted); }
-.pagination-wrapper { margin-top: 2.5rem; display: flex; justify-content: center; }
+/* ── PAGINATION LBA ───────────────────────────────────────── */
+.pagination-wrapper {
+    margin-top: 2.5rem;
+    display: flex;
+    justify-content: center;
+}
 
+.lba-pagination {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.lba-pag-info {
+    font-size: 0.82rem;
+    color: var(--muted);
+}
+
+.lba-pag-links {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.lba-pag-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    height: 36px;
+    padding: 0 0.6rem;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    font-weight: 500;
+    text-decoration: none;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--text);
+    transition: all 0.2s;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.lba-pag-btn:hover {
+    background: var(--cream);
+    border-color: var(--green);
+    color: var(--green);
+}
+
+.lba-pag-active {
+    background: var(--green) !important;
+    color: #fff !important;
+    border-color: var(--green) !important;
+    font-weight: 700;
+    cursor: default;
+}
+
+.lba-pag-disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.lba-pag-dots {
+    border: none;
+    background: transparent;
+    cursor: default;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+}
+
+.lba-pag-dots:hover {
+    background: transparent;
+    border-color: transparent;
+    color: var(--muted);
+}
 /* ── AUTH ─────────────────────────────────────────────────── */
 .auth-page { min-height: 70vh; display: flex; align-items: center; justify-content: center; padding: 3rem 1.5rem; }
 .auth-card { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 2.5rem; width: 100%; max-width: 440px; }
